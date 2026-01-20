@@ -453,6 +453,53 @@
             }
         }
 
+        /* Screenshots */
+        .screenshots {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .screenshot-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            margin-top: 40px;
+        }
+
+        .screenshot-item {
+            background: var(--light);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .screenshot-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+
+        .screenshot-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .screenshot-item h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+            padding: 16px 16px 8px;
+        }
+
+        .screenshot-item p {
+            font-size: 14px;
+            color: var(--gray);
+            padding: 0 16px 16px;
+        }
+
         /* Animations */
         @keyframes float {
             0%, 100% { transform: translateY(0); }
@@ -473,8 +520,9 @@
             </a>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
+                <li><a href="#screenshots">Screenshots</a></li>
                 <li><a href="#how-it-works">How it Works</a></li>
-                <li><a href="#use-cases">Use Cases</a></li>
+                <li><a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" target="_blank">User Guide</a></li>
                 <li><a href="https://github.com/devload/swiftcast" target="_blank">GitHub</a></li>
             </ul>
             <a href="https://github.com/devload/swiftcast/releases" class="btn btn-primary" target="_blank">
@@ -573,6 +621,42 @@
         </div>
     </section>
 
+    <section class="screenshots" id="screenshots">
+        <div class="container">
+            <div class="section-title">
+                <h2>Screenshots</h2>
+                <p>See SwiftCast in action with its intuitive and modern interface.</p>
+            </div>
+            <div class="screenshot-gallery">
+                <div class="screenshot-item">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/00-overview.png" alt="SwiftCast Overview" loading="lazy">
+                    <h4>Dashboard Overview</h4>
+                    <p>Main control center with proxy status and quick actions</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/02-accounts.png" alt="Account Management" loading="lazy">
+                    <h4>Account Management</h4>
+                    <p>Add and manage multiple AI provider accounts</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/03-sessions.png" alt="Session Management" loading="lazy">
+                    <h4>Session Management</h4>
+                    <p>Configure different vendors and models per session</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/04-usage.png" alt="Usage Monitoring" loading="lazy">
+                    <h4>Usage Monitoring</h4>
+                    <p>Track token usage by model, session, and day</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" class="btn btn-secondary" target="_blank">
+                    View Full User Guide
+                </a>
+            </div>
+        </div>
+    </section>
+
     <section class="use-cases" id="use-cases">
         <div class="container">
             <div class="section-title">
@@ -631,6 +715,7 @@
                 <div class="footer-links">
                     <h4>Resources</h4>
                     <ul>
+                        <li><a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" target="_blank">User Guide</a></li>
                         <li><a href="https://docs.anthropic.com" target="_blank">Claude API Docs</a></li>
                         <li><a href="https://tauri.app" target="_blank">Tauri Framework</a></li>
                     </ul>
