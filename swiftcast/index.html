@@ -665,51 +665,110 @@
             }
         }
 
-        /* Screenshots */
-        .screenshots {
-            padding: 100px 0;
-            background: white;
-        }
-
-        .screenshot-gallery {
+        /* Workflow Steps */
+        .workflow-step {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 32px;
-            margin-top: 40px;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin-top: 60px;
         }
 
-        .screenshot-item {
-            background: var(--light);
+        .workflow-step.reverse {
+            direction: rtl;
+        }
+
+        .workflow-step.reverse > * {
+            direction: ltr;
+        }
+
+        .workflow-content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .workflow-content .step-number {
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .workflow-text h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 16px;
+        }
+
+        .workflow-text p {
+            color: var(--gray);
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .workflow-text code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .workflow-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .workflow-features li {
+            color: var(--gray);
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .workflow-image {
             border-radius: 16px;
             overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             border: 1px solid #e2e8f0;
             transition: all 0.3s;
         }
 
-        .screenshot-item:hover {
+        .workflow-image:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-            border-color: var(--primary);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.2);
         }
 
-        .screenshot-item img {
+        .workflow-image img {
             width: 100%;
             height: auto;
             display: block;
-            border-bottom: 1px solid #e2e8f0;
         }
 
-        .screenshot-item h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--dark);
-            padding: 16px 16px 8px;
-        }
+        @media (max-width: 900px) {
+            .workflow-step,
+            .workflow-step.reverse {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                direction: ltr;
+            }
 
-        .screenshot-item p {
-            font-size: 14px;
-            color: var(--gray);
-            padding: 0 16px 16px;
+            .workflow-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .workflow-features {
+                text-align: left;
+                display: inline-block;
+            }
+
+            .workflow-text h3 {
+                font-size: 20px;
+            }
+
+            .workflow-text p {
+                font-size: 15px;
+            }
         }
 
         /* Animations */
@@ -732,7 +791,6 @@
             </a>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
-                <li><a href="#screenshots">Screenshots</a></li>
                 <li><a href="#how-it-works">How it Works</a></li>
                 <li><a href="#custom-tasks">Custom Tasks</a></li>
                 <li><a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" target="_blank">User Guide</a></li>
@@ -817,63 +875,83 @@
         <div class="container">
             <div class="section-title">
                 <h2>How It Works</h2>
-                <p>SwiftCast acts as a local proxy between Claude Code and your AI providers.</p>
+                <p>SwiftCast acts as a local proxy between Claude Code and your AI providers. See it in action.</p>
             </div>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h3>Add Accounts</h3>
-                    <p>Add your Anthropic and/or GLM API accounts with their respective API keys.</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <h3>Start Proxy</h3>
-                    <p>SwiftCast automatically configures Claude Code to route through the local proxy.</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <h3>Use Claude Code</h3>
-                    <p>Work normally with Claude Code. Switch providers or models anytime from the SwiftCast UI.</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <h3>Monitor Usage</h3>
-                    <p>Track your API usage in real-time. View detailed breakdowns by model, session, or day.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section class="screenshots" id="screenshots">
-        <div class="container">
-            <div class="section-title">
-                <h2>Screenshots</h2>
-                <p>See SwiftCast in action with its intuitive and modern interface.</p>
-            </div>
-            <div class="screenshot-gallery">
-                <div class="screenshot-item">
-                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/00-overview.png" alt="SwiftCast Overview" loading="lazy">
-                    <h4>Dashboard Overview</h4>
-                    <p>Main control center with proxy status and quick actions</p>
+            <div class="workflow-step">
+                <div class="workflow-content">
+                    <div class="step-number">1</div>
+                    <div class="workflow-text">
+                        <h3>Add Your AI Accounts</h3>
+                        <p>Register your Anthropic (Claude) and GLM API accounts. Use <strong>Auto Scan</strong> on macOS to automatically import existing Claude credentials from Keychain, or add accounts manually with your API keys.</p>
+                        <ul class="workflow-features">
+                            <li>✓ One-click Auto Scan for macOS</li>
+                            <li>✓ Support for multiple providers</li>
+                            <li>✓ Secure local storage</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="screenshot-item">
+                <div class="workflow-image">
                     <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/02-accounts.png" alt="Account Management" loading="lazy">
-                    <h4>Account Management</h4>
-                    <p>Add and manage multiple AI provider accounts</p>
-                </div>
-                <div class="screenshot-item">
-                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/03-sessions.png" alt="Session Management" loading="lazy">
-                    <h4>Session Management</h4>
-                    <p>Configure different vendors and models per session</p>
-                </div>
-                <div class="screenshot-item">
-                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/04-usage.png" alt="Usage Monitoring" loading="lazy">
-                    <h4>Usage Monitoring</h4>
-                    <p>Track token usage by model, session, and day</p>
                 </div>
             </div>
-            <div style="text-align: center; margin-top: 40px;">
-                <a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" class="btn btn-secondary" target="_blank">
+
+            <div class="workflow-step reverse">
+                <div class="workflow-content">
+                    <div class="step-number">2</div>
+                    <div class="workflow-text">
+                        <h3>Start Proxy & Control Dashboard</h3>
+                        <p>Launch the proxy with one click. SwiftCast automatically configures Claude Code's <code>settings.json</code> to route through the local proxy. Switch between providers instantly.</p>
+                        <ul class="workflow-features">
+                            <li>✓ Auto-configure Claude Code</li>
+                            <li>✓ Real-time proxy status</li>
+                            <li>✓ System tray for quick access</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="workflow-image">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/01-dashboard.png" alt="Dashboard" loading="lazy">
+                </div>
+            </div>
+
+            <div class="workflow-step">
+                <div class="workflow-content">
+                    <div class="step-number">3</div>
+                    <div class="workflow-text">
+                        <h3>Manage Multiple Sessions</h3>
+                        <p>Run multiple Claude Code instances with different configurations. Assign different vendors and models to each session. Perfect for A/B testing or cost optimization.</p>
+                        <ul class="workflow-features">
+                            <li>✓ Per-session vendor selection</li>
+                            <li>✓ Model override per session</li>
+                            <li>✓ Live session tracking</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="workflow-image">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/03-sessions.png" alt="Session Management" loading="lazy">
+                </div>
+            </div>
+
+            <div class="workflow-step reverse">
+                <div class="workflow-content">
+                    <div class="step-number">4</div>
+                    <div class="workflow-text">
+                        <h3>Monitor Usage in Real-Time</h3>
+                        <p>Track token consumption across all sessions. View detailed breakdowns by model, day, or session. Optimize costs by understanding your usage patterns.</p>
+                        <ul class="workflow-features">
+                            <li>✓ Token usage by model</li>
+                            <li>✓ Daily usage trends</li>
+                            <li>✓ Per-session statistics</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="workflow-image">
+                    <img src="https://raw.githubusercontent.com/devload/swiftcast/master/docs/04-usage.png" alt="Usage Monitoring" loading="lazy">
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 60px;">
+                <a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" class="btn btn-primary" target="_blank">
                     View Full User Guide
                 </a>
             </div>
