@@ -734,6 +734,7 @@
                 <li><a href="#features">Features</a></li>
                 <li><a href="#screenshots">Screenshots</a></li>
                 <li><a href="#how-it-works">How it Works</a></li>
+                <li><a href="#custom-tasks">Custom Tasks</a></li>
                 <li><a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md" target="_blank">User Guide</a></li>
                 <li><a href="https://github.com/devload/swiftcast" target="_blank">GitHub</a></li>
             </ul>
@@ -745,7 +746,7 @@
 
     <section class="hero">
         <div class="container hero-content">
-            <div class="hero-badge">v0.2.1 - Memory Optimization & Stability</div>
+            <div class="hero-badge">v0.2.1 - Custom Tasks & Session Hooks</div>
             <h1>Seamless <span>AI Provider</span><br>Switching for Claude Code</h1>
             <p>Switch between Claude and GLM APIs instantly. Monitor usage in real-time. Manage multiple sessions with different models.</p>
             <div class="hero-buttons">
@@ -797,6 +798,16 @@
                     <div class="feature-icon">🖥️</div>
                     <h3>System Tray</h3>
                     <p>Runs quietly in system tray. Quick access to start/stop proxy and view status at any time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Custom Tasks</h3>
+                    <p>Intercept messages with <code>&gt;&gt;swiftcast</code> to run shell commands, HTTP requests, or read files.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🪝</div>
+                    <h3>Hook System</h3>
+                    <p>Powerful hooks for logging, context injection, and custom behavior. Configure per-session or system-wide.</p>
                 </div>
             </div>
         </div>
@@ -892,6 +903,38 @@
                     <h3>🔀 Fallback Support</h3>
                     <p>When one provider is rate-limited or down, quickly switch to another without interrupting your workflow.</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works" id="custom-tasks">
+        <div class="container">
+            <div class="section-title">
+                <h2>Custom Tasks & Hooks</h2>
+                <p>Extend SwiftCast with powerful automation and customization features.</p>
+            </div>
+            <div class="use-case-grid">
+                <div class="use-case">
+                    <h3>⚡ Custom Tasks</h3>
+                    <p>Intercept Claude messages starting with <code>&gt;&gt;swiftcast &lt;task&gt;</code> to execute shell commands, HTTP requests, or file operations. Configure in <code>~/.sessioncast/tasks.json</code>.</p>
+                </div>
+                <div class="use-case">
+                    <h3>📝 API Logging</h3>
+                    <p>Log all API requests and responses to JSON files for debugging, auditing, or analysis. Enable/disable per session.</p>
+                </div>
+                <div class="use-case">
+                    <h3>💉 Context Injection</h3>
+                    <p>Automatically inject custom context during conversation compaction. Keep your project rules and preferences persistent across long sessions.</p>
+                </div>
+                <div class="use-case">
+                    <h3>🎛️ Session-Level Config</h3>
+                    <p>Override system settings per session. Enable/disable logging, custom tasks, or context injection for specific sessions via API.</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="https://github.com/devload/swiftcast/blob/master/docs/GUIDE.md#custom-tasks" class="btn btn-secondary" target="_blank">
+                    View Custom Tasks Guide
+                </a>
             </div>
         </div>
     </section>
