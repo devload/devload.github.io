@@ -635,35 +635,163 @@
     </div>
     <p>TurboQuant은 데이터를 <strong>빙글빙글 돌려서</strong>(랜덤 회전) 모든 값이 <strong>골고루 퍼지게</strong> 만들어.</p>
 
-    <h4>단계별 설명</h4>
+    <h4>구체적으로 따라가 보자! (숫자 예시)</h4>
 
-    <p><strong>1단계: 빙글빙글 돌리기 (랜덤 회전)</strong></p>
-    <div class="analogy green">
-      <div class="label">비유</div>
-      <p>주사위를 생각해봐. 주사위의 한 면만 보면 숫자 하나만 보이지만, 빙글빙글 굴리면 <strong>어떤 면이든 나올 확률이 같아져</strong>.</p>
-      <p>TurboQuant도 데이터를 "굴려서" 어떤 방향을 봐도 <strong>비슷비슷하게</strong> 만들어.</p>
-    </div>
-    <p>수학적으로는: 랜덤 회전 행렬 &Pi;를 만들어서 벡터 x에 곱해. 그러면 회전된 벡터의 각 좌표가 <strong>베타 분포</strong>를 따르게 되고, 차원이 높으면 이게 <strong>종 모양(가우시안)</strong>에 가까워져. 그리고 각 좌표가 <strong>서로 거의 독립</strong>이 돼!</p>
+    <p>실제로 숫자 6개짜리 작은 벡터를 압축하는 과정을 <strong>처음부터 끝까지</strong> 따라가 볼게. (실제 AI는 1536개지만, 원리는 똑같아!)</p>
 
-    <p><strong>2단계: 좌표마다 최적의 대표값 정하기</strong></p>
-    <p>골고루 퍼진 값들을 이제 몇 개의 <strong>대표값(코드북)</strong>으로 바꿔.</p>
-    <div class="analogy orange">
-      <div class="label">비유: 색연필 고르기</div>
-      <p>256색 중에서 8색을 골라야 한다면?</p>
-      <ul>
-        <li>빨강 계열이 많으면 &rarr; 빨강 계열 대표색을 여러 개 넣고</li>
-        <li>파랑 계열이 적으면 &rarr; 파랑 대표색은 하나만</li>
-      </ul>
-      <p>이렇게 <strong>값이 많이 모여있는 구간에 대표값을 더 촘촘하게</strong> 배치하면, 전체 오차가 줄어들어.</p>
+    <div class="highlight-box" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+      <h3>준비물 (한 번만 만들면 계속 씀)</h3>
+      <p><strong>1. 회전판(행렬 &Pi;)</strong> &mdash; 랜덤한 숫자로 채운 표. 컴퓨터가 QR 분해라는 방법으로 만들어. 마치 룰렛 휠처럼, 데이터를 골고루 섞어주는 역할.</p>
+      <p><strong>2. 대표값 목록(코드북)</strong> &mdash; 2비트면 대표값 4개를 미리 정해놔:<br>
+      <span style="color:#fde68a; font-family: monospace; font-size: 18px;">&nbsp;&nbsp;[-0.39, -0.12, +0.12, +0.39]</span><br>
+      이 4개 숫자가 "색연필 4색"이야. 어떤 값이 오든 이 중 가장 가까운 걸로 바꿀 거야.</p>
     </div>
 
-    <p>비트 수(b)에 따른 대표값 개수: b=1이면 2개, b=2이면 4개, b=3이면 8개, b=4이면 16개.</p>
-
-    <p><strong>3단계: 원래대로 돌려놓기</strong></p>
+    <p><strong>Step 1: 원본 데이터</strong></p>
     <div class="analogy">
-      <div class="label">비유</div>
-      <p>퍼즐을 섞었다가(압축) &rarr; 대충 맞추고(대표값) &rarr; 다시 원래 방향으로 놓기(역회전)</p>
+      <div class="label">시작</div>
+      <p>AI가 기억해야 할 벡터가 이거라고 해보자:</p>
+      <p style="font-family: monospace; font-size: 16px; text-align: center;">
+        x = [<strong>0.82</strong>, 0.01, -0.15, <strong>0.53</strong>, -0.03, 0.12]
+      </p>
+      <p>보이지? 0.82랑 0.53은 크고, 나머지는 작아. <strong>쏠려 있어!</strong></p>
     </div>
+
+    <p><strong>Step 2: 빙글빙글 돌리기 (&Pi; &times; x)</strong></p>
+    <div class="analogy green">
+      <div class="label">회전!</div>
+      <p>회전판(&Pi;)을 곱하면 값들이 골고루 퍼져:</p>
+      <p style="font-family: monospace; font-size: 16px; text-align: center;">
+        y = &Pi; &times; x = [<strong>-0.35</strong>, <strong>0.28</strong>, <strong>-0.41</strong>, <strong>0.15</strong>, <strong>0.38</strong>, <strong>-0.22</strong>]
+      </p>
+      <p>아까는 0.82, 0.53이 튀어나왔는데, 이제는 <strong>전부 -0.41 ~ 0.38 사이</strong>에 골고루! 이게 핵심 마법이야.</p>
+      <p>왜 이렇게 되냐면, 회전은 벡터의 <strong>길이는 안 바꾸고 방향만</strong> 바꾸거든. 한쪽에 몰려 있던 값을 빙글 돌려서 <strong>모든 방향에 고르게</strong> 퍼뜨리는 거야.</p>
+    </div>
+
+    <p><strong>Step 3: 각 숫자를 가장 가까운 대표값으로 바꾸기</strong></p>
+    <div class="analogy orange">
+      <div class="label">양자화! (2비트 = 대표값 4개)</div>
+      <p>대표값: <span style="font-family:monospace;">[-0.39, -0.12, +0.12, +0.39]</span></p>
+      <p>각 숫자마다 가장 가까운 대표값을 찾아:</p>
+      <div class="table-wrap" style="margin: 12px 0;">
+        <table>
+          <thead><tr><th>원래 값(y)</th><th>가장 가까운 대표값</th><th>저장하는 번호</th><th>오차</th></tr></thead>
+          <tbody>
+            <tr><td>-0.35</td><td><strong>-0.39</strong></td><td>00</td><td>0.04</td></tr>
+            <tr><td>0.28</td><td><strong>+0.39</strong></td><td>11</td><td>0.11</td></tr>
+            <tr><td>-0.41</td><td><strong>-0.39</strong></td><td>00</td><td>0.02</td></tr>
+            <tr><td>0.15</td><td><strong>+0.12</strong></td><td>10</td><td>0.03</td></tr>
+            <tr><td>0.38</td><td><strong>+0.39</strong></td><td>11</td><td>0.01</td></tr>
+            <tr><td>-0.22</td><td><strong>-0.12</strong></td><td>01</td><td>0.10</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>이제 저장하는 건 <strong>"00 11 00 10 11 01"</strong> &mdash; 숫자 6개를 12비트(2비트 &times; 6)로 줄였어!</p>
+      <p>원래는 숫자 하나에 16비트(또는 32비트)가 필요했으니 <strong>8배~16배 압축</strong>이야.</p>
+    </div>
+
+    <p><strong>Step 4: 복원할 때 - 반대로 돌려놓기</strong></p>
+    <div class="analogy purple">
+      <div class="label">복원!</div>
+      <p>"00 11 00 10 11 01"을 받으면:</p>
+      <p><strong>4-1.</strong> 번호를 대표값으로 되돌려:</p>
+      <p style="font-family: monospace; font-size: 16px; text-align: center;">
+        &ycirc; = [-0.39, +0.39, -0.39, +0.12, +0.39, -0.12]
+      </p>
+      <p><strong>4-2.</strong> 회전판을 반대로 돌려 (&Pi;<sup>T</sup>, 전치행렬):</p>
+      <p style="font-family: monospace; font-size: 16px; text-align: center;">
+        x&#771; = &Pi;<sup>T</sup> &times; &ycirc; = [<strong>0.79</strong>, 0.03, -0.13, <strong>0.50</strong>, -0.05, 0.14]
+      </p>
+      <p>원본이랑 비교해볼까?</p>
+      <div class="table-wrap" style="margin: 12px 0;">
+        <table>
+          <thead><tr><th></th><th>값 1</th><th>값 2</th><th>값 3</th><th>값 4</th><th>값 5</th><th>값 6</th></tr></thead>
+          <tbody>
+            <tr><td><strong>원본 x</strong></td><td>0.82</td><td>0.01</td><td>-0.15</td><td>0.53</td><td>-0.03</td><td>0.12</td></tr>
+            <tr class="winner"><td><strong>복원 x&#771;</strong></td><td>0.79</td><td>0.03</td><td>-0.13</td><td>0.50</td><td>-0.05</td><td>0.14</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>거의 비슷하지?</strong> 2비트(4배 압축)만 써도 이 정도야!</p>
+    </div>
+
+    <p><strong>왜 "돌리기"가 핵심이냐면:</strong></p>
+    <div class="analogy red">
+      <div class="label">만약 안 돌리고 바로 압축하면?</div>
+      <p>원본 [<strong>0.82</strong>, 0.01, ...] 에서 0.82는 대표값 중 가장 큰 0.39로 바뀌어야 해.</p>
+      <p>0.82 &rarr; 0.39? <strong>오차가 0.43이나 돼!</strong></p>
+      <p>반면 돌린 후에는 모든 값이 -0.41 ~ 0.38이니까, 대표값 [-0.39, -0.12, +0.12, +0.39]로 <strong>어떤 값이든 잘 커버돼</strong>.</p>
+      <p>이게 "빙글빙글 돌리기"의 위력이야. <strong>쏠린 데이터를 골고루 만들어서, 같은 대표값으로도 훨씬 정밀하게 압축</strong>할 수 있는 거야!</p>
+    </div>
+
+    <hr style="border:none; border-top:1px dashed var(--border); margin: 32px 0;">
+
+    <h4>내적용(Algorithm 2)도 구체적으로!</h4>
+
+    <p>이번엔 "두 벡터가 얼마나 비슷한지" 비교하는 내적용 압축을 따라가 볼게.</p>
+
+    <div class="analogy">
+      <div class="label">상황 설정</div>
+      <p>"강아지 훈련법" 검색어 벡터 <strong>y</strong>와, 저장된 문서 벡터 <strong>x</strong>가 있어. 이 둘의 내적(닮은 정도)을 정확히 계산하고 싶어.</p>
+      <p>2비트가 주어졌다면:</p>
+      <ul>
+        <li><strong>1비트</strong>: MSE 압축에 사용 (대표값 2개: [+0.36, -0.36])</li>
+        <li><strong>1비트</strong>: QJL 보정에 사용 (부호만: + 또는 -)</li>
+      </ul>
+    </div>
+
+    <p><strong>Step 1: MSE로 대충 압축 (1비트)</strong></p>
+    <div class="analogy green">
+      <div class="label">대략적인 답 적기</div>
+      <p>돌린 후 각 좌표를 +0.36 또는 -0.36 중 하나로 바꿔:</p>
+      <p style="font-family: monospace; font-size: 15px; text-align: center;">
+        돌린 값 y: [-0.35, 0.28, -0.41, 0.15, 0.38, -0.22]<br>
+        MSE 압축: [<strong>-0.36</strong>, <strong>+0.36</strong>, <strong>-0.36</strong>, <strong>+0.36</strong>, <strong>+0.36</strong>, <strong>-0.36</strong>]
+      </p>
+      <p>양수는 +0.36, 음수는 -0.36. 1비트니까 두 가지밖에 없어.</p>
+    </div>
+
+    <p><strong>Step 2: 틀린 부분(잔차) 계산</strong></p>
+    <div class="analogy orange">
+      <div class="label">검산!</div>
+      <p>원래 값에서 압축 값을 빼면 = 오차(잔차):</p>
+      <p style="font-family: monospace; font-size: 15px; text-align: center;">
+        r = 돌린 값 - MSE 압축<br>
+        r = [<strong>+0.01</strong>, <strong>-0.08</strong>, <strong>-0.05</strong>, <strong>-0.21</strong>, <strong>+0.02</strong>, <strong>+0.14</strong>]
+      </p>
+      <p>이게 "답은 적었는데 틀린 부분"이야.</p>
+    </div>
+
+    <p><strong>Step 3: 잔차를 QJL로 1비트 압축</strong></p>
+    <div class="analogy purple">
+      <div class="label">오차 방향만 메모!</div>
+      <p>랜덤 행렬 S를 잔차에 곱한 다음, <strong>부호(+/-)만</strong> 저장:</p>
+      <p style="font-family: monospace; font-size: 15px; text-align: center;">
+        S &times; r = [0.13, -0.07, 0.22, -0.15, 0.03, -0.18]<br>
+        sign = [<strong>+, -, +, -, +, -</strong>]
+      </p>
+      <p>그리고 잔차의 크기(길이)도 하나 저장: &gamma; = 0.27</p>
+      <p>"오차가 어느 방향으로 났는지" + "오차가 대충 얼마나 큰지"만 메모하는 거야.</p>
+    </div>
+
+    <p><strong>Step 4: 복원할 때 - 합치기!</strong></p>
+    <div class="analogy green">
+      <div class="label">답 + 보정 = 더 정확한 답</div>
+      <p><strong>4-1.</strong> MSE 복원값: x&#771;<sub>mse</sub> (대충 맞는 답)</p>
+      <p><strong>4-2.</strong> QJL 보정값: x&#771;<sub>qjl</sub> = (상수) &times; &gamma; &times; S<sup>T</sup> &times; sign (오차 보정)</p>
+      <p><strong>4-3.</strong> 최종 답: x&#771; = x&#771;<sub>mse</sub> + x&#771;<sub>qjl</sub></p>
+      <p>이렇게 하면 내적을 계산했을 때 <strong>평균적으로 원래 값과 정확히 같아</strong> (편향 없음!).</p>
+      <p>한 번은 좀 높게, 한 번은 좀 낮게 나올 수 있지만, 여러 번 하면 <strong>딱 맞아!</strong></p>
+    </div>
+
+    <div class="highlight-box">
+      <h3>Algorithm 1 vs Algorithm 2 한눈에 비교</h3>
+      <p><strong>Algorithm 1 (MSE용)</strong>: 돌리기 &rarr; 대표값 치환 &rarr; 되돌리기. 끝! 단순함.</p>
+      <p><strong>Algorithm 2 (내적용)</strong>: (b-1)비트로 MSE 압축 &rarr; 틀린 부분 계산 &rarr; 1비트로 오차 방향 기록 &rarr; 나중에 합쳐서 보정.</p>
+      <p>Algorithm 2가 한 단계 더 있는 이유: <strong>MSE 압축만으로는 비교할 때 한쪽으로 치우치니까</strong>, QJL 보정으로 공정하게 만드는 거야!</p>
+    </div>
+
+    <hr style="border:none; border-top:1px dashed var(--border); margin: 32px 0;">
 
     <h4>성능은 얼마나 좋아?</h4>
     <div class="table-wrap">
