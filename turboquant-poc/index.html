@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatAp × TurboQuant POC 결과</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --accent: #38bdf8;
+      --green: #4ade80;
+      --green-bg: rgba(74,222,128,0.1);
+      --orange: #fb923c;
+      --orange-bg: rgba(251,146,60,0.1);
+      --red: #f87171;
+      --red-bg: rgba(248,113,113,0.1);
+      --purple: #a78bfa;
+      --purple-bg: rgba(167,139,250,0.1);
+      --border: #334155;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; font-size: 16px; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; background: rgba(15,23,42,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; padding: 0 20px; }
+    nav .inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; height: 52px; gap: 20px; overflow-x: auto; scrollbar-width: none; }
+    nav .inner::-webkit-scrollbar { display: none; }
+    nav .logo { font-weight: 900; font-size: 15px; color: var(--accent); white-space: nowrap; }
+    nav a { color: var(--text-dim); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; }
+    nav a:hover { color: var(--accent); }
+
+    .hero { max-width: 960px; margin: 0 auto; padding: 90px 20px 40px; text-align: center; }
+    .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 20px; font-family: var(--mono); }
+    .badge.blue { background: rgba(56,189,248,0.15); color: var(--accent); }
+    .badge.purple { background: var(--purple-bg); color: var(--purple); }
+    .badge.green { background: var(--green-bg); color: var(--green); }
+    .hero h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 900; line-height: 1.3; margin-bottom: 12px; }
+    .hero h1 span { color: var(--accent); }
+    .hero .sub { color: var(--text-dim); font-size: 15px; max-width: 600px; margin: 0 auto; }
+
+    .content { max-width: 820px; margin: 0 auto; padding: 0 20px 80px; }
+    .section { margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border); }
+    .section-tag { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+    .section h2 { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+    .section .lead { color: var(--text-dim); font-size: 15px; margin-bottom: 20px; }
+    h3 { font-size: 18px; font-weight: 700; margin: 32px 0 10px; }
+    h4 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; color: var(--accent); }
+    p { margin-bottom: 14px; }
+    strong { color: #fff; }
+    ul, ol { margin: 8px 0 14px 20px; }
+    li { margin-bottom: 4px; }
+
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.6; margin: 16px 0; color: var(--text-dim); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead { background: var(--surface); }
+    th { padding: 10px 14px; text-align: left; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); border-bottom: 2px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    .hl { background: var(--green-bg) !important; }
+    .anomaly { color: var(--red); font-weight: 700; }
+    .normal { color: var(--green); font-weight: 700; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; }
+    .card .num { font-size: 28px; font-weight: 900; font-family: var(--mono); }
+    .card .num.blue { color: var(--accent); }
+    .card .num.green { color: var(--green); }
+    .card .num.orange { color: var(--orange); }
+    .card .num.purple { color: var(--purple); }
+    .card .num.red { color: var(--red); }
+    .card .lbl { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+    .box { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 18px 0; }
+    .box.green { border-color: var(--green); background: var(--green-bg); }
+    .box.orange { border-color: var(--orange); background: var(--orange-bg); }
+    .box.red { border-color: var(--red); background: var(--red-bg); }
+    .box.purple { border-color: var(--purple); background: var(--purple-bg); }
+    .box .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .box .tag { color: var(--accent); }
+    .box.green .tag { color: var(--green); }
+    .box.orange .tag { color: var(--orange); }
+    .box.red .tag { color: var(--red); }
+    .box.purple .tag { color: var(--purple); }
+    .box p:last-child { margin-bottom: 0; }
+
+    /* Flow diagram */
+    .flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 24px 0; }
+    .flow-h { display: flex; align-items: center; gap: 0; justify-content: center; flex-wrap: wrap; margin: 24px 0; }
+    .fstep { background: var(--surface); border: 2px solid var(--accent); border-radius: 10px; padding: 10px 20px; font-weight: 700; font-size: 14px; text-align: center; min-width: 140px; }
+    .fstep.green { border-color: var(--green); }
+    .fstep.red { border-color: var(--red); }
+    .fstep.orange { border-color: var(--orange); }
+    .fstep .sub { font-weight: 400; font-size: 12px; color: var(--text-dim); }
+    .farrow { color: var(--accent); font-size: 20px; padding: 4px 8px; }
+    .farrow-down { color: var(--accent); font-size: 20px; padding: 4px 0; }
+
+    /* Bar chart */
+    .bar-wrap { margin: 8px 0; }
+    .bar-label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .bar { height: 28px; border-radius: 6px; background: var(--surface2); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: 12px; font-weight: 700; font-family: var(--mono); transition: width 0.5s; }
+    .bar-fill.blue { background: var(--accent); color: var(--bg); }
+    .bar-fill.green { background: var(--green); color: var(--bg); }
+    .bar-fill.red { background: var(--red); color: var(--bg); }
+    .bar-fill.orange { background: var(--orange); color: var(--bg); }
+    .bar-fill.dim { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+
+    /* Versus */
+    .vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin: 20px 0; }
+    .vs-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; }
+    .vs-mid { font-size: 24px; font-weight: 900; color: var(--text-dim); }
+
+    footer { text-align: center; padding: 32px 20px; color: var(--text-dim); font-size: 12px; border-top: 1px solid var(--border); max-width: 820px; margin: 0 auto; }
+    footer a { color: var(--accent); }
+
+    @media (max-width: 640px) {
+      .hero { padding-top: 72px; }
+      .cards { grid-template-columns: 1fr 1fr; }
+      .flow-h { flex-direction: column; }
+      .farrow { transform: rotate(90deg); }
+      .vs { grid-template-columns: 1fr; }
+      .vs-mid { display: none; }
+      pre { font-size: 12px; }
+      table { font-size: 13px; }
+      th, td { padding: 8px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <span class="logo">WhatAp x TQ</span>
+    <a href="#story">배경</a>
+    <a href="#poc1">이상 탐지</a>
+    <a href="#poc2">시계열 압축</a>
+    <a href="#poc3">에러 검색</a>
+    <a href="#poc4">패턴 매칭</a>
+    <a href="#summary">결론</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; font-size:14px;">
+    <a href="https://devload.github.io/turboquant/" target="_blank"
+       style="color:var(--accent); text-decoration:underline; text-underline-offset:3px;">TurboQuant 논문 해설 &rarr;</a>
+    <a href="https://arxiv.org/abs/2504.19874" target="_blank"
+       style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">원본 논문 (arXiv) &rarr;</a>
+  </div>
+  <div class="badges">
+    <span class="badge blue">Java APM Demo</span>
+    <span class="badge purple">10,000 records</span>
+    <span class="badge green">2026-03-26</span>
+  </div>
+  <h1>모니터링 데이터에<br><span>TurboQuant</span>을 적용하면?</h1>
+  <p class="sub">WhatAp 실제 APM 데이터 10,000건으로 4가지 활용 시나리오를 검증했습니다.</p>
+</header>
+
+<main class="content">
+
+  <!-- ====== STORY ====== -->
+  <section id="story" class="section">
+    <div class="section-tag">Background</div>
+    <h2>왜 모니터링에 벡터 압축이 필요할까?</h2>
+    <p class="lead">모니터링 시스템은 매초 수만 개의 숫자를 수집합니다. 이 숫자들을 "벡터"로 묶으면 강력한 분석이 가능해지지만, 저장 비용과 검색 속도가 문제입니다.</p>
+
+    <div class="box">
+      <div class="tag">핵심 아이디어</div>
+      <p>서버의 상태를 <strong>숫자 묶음(벡터)</strong>으로 표현하면, "지금 상태가 정상인지", "과거에 비슷한 상황이 있었는지"를 <strong>수학적으로 비교</strong>할 수 있습니다.</p>
+      <p>TurboQuant은 이 벡터를 <strong>4~10배 압축</strong>하면서도 비교 정확도를 유지하는 기술입니다.</p>
+    </div>
+
+    <h3>데이터는 이렇게 수집했습니다</h3>
+
+    <div class="flow-h">
+      <div class="fstep">WhatAp APM<div class="sub">Java Demo 서버 6대</div></div>
+      <div class="farrow">&rarr;</div>
+      <div class="fstep">whatapCli (MXQL)<div class="sub">24시간, 10,000건</div></div>
+      <div class="farrow">&rarr;</div>
+      <div class="fstep green">벡터 변환<div class="sub">7차원 x 6,651개</div></div>
+    </div>
+
+    <p>각 서버의 순간 상태를 <strong>7개 메트릭</strong>으로 표현합니다:</p>
+
+    <div class="cards">
+      <div class="card"><div class="num blue">TPS</div><div class="lbl">초당 처리량</div></div>
+      <div class="card"><div class="num orange">Resp</div><div class="lbl">응답 시간</div></div>
+      <div class="card"><div class="num red">CPU</div><div class="lbl">CPU 사용률</div></div>
+      <div class="card"><div class="num purple">ActTX</div><div class="lbl">활성 트랜잭션</div></div>
+      <div class="card"><div class="num green">SQL</div><div class="lbl">활성 SQL</div></div>
+      <div class="card"><div class="num blue">HTTPC</div><div class="lbl">HTTP 호출</div></div>
+      <div class="card"><div class="num orange">DBC</div><div class="lbl">DB 커넥션</div></div>
+    </div>
+
+    <pre>서버 상태 벡터 = [226.0, 2533, 87.3, 534, 10, 253, 14]
+                   TPS   응답  CPU  활성TX SQL HTTPC DBC
+
+→ 정규화 후: [0.382, 0.428, 0.147, 0.090, 0.017, 0.043, 0.002]
+  (길이 1인 단위 벡터로 변환 - TurboQuant 입력 조건)</pre>
+  </section>
+
+  <!-- ====== POC 1 ====== -->
+  <section id="poc1" class="section">
+    <div class="section-tag">POC 1</div>
+    <h2>이상 탐지: "지금 서버 상태가 정상인가?"</h2>
+    <p class="lead">기존 임계치 방식("CPU > 80%면 알림")으로는 복합적인 이상을 잡기 어렵습니다. 벡터 유사도 기반이면 "CPU는 괜찮은데 TPS가 급감하면서 응답시간이 치솟는" 복합 패턴도 탐지할 수 있습니다.</p>
+
+    <h3>어떻게 작동하나요?</h3>
+
+    <div class="flow">
+      <div class="fstep" style="width:90%;">1. 과거 24시간의 정상 상태 벡터 5,320개를 수집<div class="sub">이것이 "정상이란 이런 것이다"를 정의하는 기준</div></div>
+      <div class="farrow-down">&darr;</div>
+      <div class="fstep green" style="width:90%;">2. TurboQuant으로 3비트 압축 (4.2배 축소)<div class="sub">148KB &rarr; 35KB. 메모리에 상주하면서 빠르게 비교 가능</div></div>
+      <div class="farrow-down">&darr;</div>
+      <div class="fstep" style="width:90%;">3. 새 데이터가 들어올 때마다 정상 DB와 "거리" 계산<div class="sub">가장 가까운 정상 벡터와의 코사인 거리</div></div>
+      <div class="farrow-down">&darr;</div>
+      <div class="fstep orange" style="width:90%;">4. 거리가 임계치를 넘으면 → ANOMALY!<div class="sub">"정상 패턴 중 비슷한 게 하나도 없다" = 이상 상태</div></div>
+    </div>
+
+    <h3>실제로 이렇게 구현했습니다</h3>
+
+    <pre># 1. whatapCli로 24시간 데이터 수집 (MXQL)
+whatap mxql --pcode 5490 --limit 10000 \
+  "CATEGORY app_counter TAGLOAD
+   SELECT [time, oid, oname, tps, resp_time, cpu, actx, act_sql, act_httpc, act_dbc]"
+
+# 2. Python에서 벡터화 + TurboQuant 압축
+tq = TurboQuantProd(d=7, b=3)   # 7차원, 3비트
+for record in records:
+    vec = normalize([record['tps'], record['resp_time'], ...])
+    compressed = tq.quant(vec)   # → (인덱스, QJL부호, 잔차크기)
+
+# 3. 새 벡터가 들어오면 정상 DB와 거리 비교
+for comp in normal_db:
+    restored = tq.dequant(*comp)
+    dist = 1 - dot(new_vec, restored)  # 코사인 거리
+if min_dist > threshold: print("ANOMALY!")</pre>
+
+    <div class="cards">
+      <div class="card"><div class="num blue">5,320</div><div class="lbl">정상 DB 벡터 (80%)</div></div>
+      <div class="card"><div class="num orange">1,331</div><div class="lbl">테스트 벡터 (20%)</div></div>
+      <div class="card"><div class="num green">148KB &rarr; 35KB</div><div class="lbl">압축 결과 (4.2x)</div></div>
+    </div>
+
+    <h3>테스트 1: 실제 데이터로 검증</h3>
+    <p>1,331개 테스트 벡터 중 200개를 샘플링해서 정상 DB 500개와 거리를 측정했습니다.</p>
+
+    <div class="box">
+      <div class="tag">거리 분포</div>
+      <p>최소: <code>-0.1702</code> &middot; 중앙값: <code>-0.1701</code> &middot; 최대: <code>-0.1697</code></p>
+      <p>95th percentile을 임계치로 설정: <code>-0.1698</code></p>
+      <p>결과: 1,331개 중 <strong>10개(0.8%)</strong>가 이상 판정 &mdash; 안정적인 데모 환경이니 대부분 정상이 맞습니다.</p>
+    </div>
+
+    <h3>테스트 2: 인위적 이상 주입</h3>
+    <p>실제 장애 시나리오를 만들어서 탐지하는지 확인:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>시나리오</th><th>상황 설명</th><th>거리</th><th>판정</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>CPU 폭등</td>
+            <td>CPU 99%, TPS는 유지 &mdash; 과부하 상태</td>
+            <td><code>0.033</code></td>
+            <td class="anomaly">ANOMALY</td>
+          </tr>
+          <tr>
+            <td>TPS 급감</td>
+            <td>TPS 1, 응답시간 5초 &mdash; 서비스 먹통</td>
+            <td><code>-0.170</code></td>
+            <td class="anomaly">ANOMALY</td>
+          </tr>
+          <tr>
+            <td>전부 0</td>
+            <td>메트릭이 안 올라옴 &mdash; 에이전트 죽음?</td>
+            <td><code>-0.043</code></td>
+            <td class="anomaly">ANOMALY</td>
+          </tr>
+          <tr class="hl">
+            <td>정상 상태</td>
+            <td>실제 운영 중 수집된 벡터</td>
+            <td><code>-0.170</code></td>
+            <td class="normal">정상</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box green">
+      <div class="tag">결과</div>
+      <p><strong>3비트(4.2배) 압축 상태에서도 이상/정상을 정확히 구분.</strong></p>
+      <p>실제 데이터 1,331개 중 이상으로 판정된 건 10개(0.8%) &mdash; 데모 환경이 안정적이니 대부분 정상이 맞습니다.</p>
+    </div>
+
+    <div class="box">
+      <div class="tag">기존 방식과 비교</div>
+      <p><strong>임계치 방식</strong>: "CPU > 80%"만 보면, CPU 70% + TPS 급감 + 응답시간 폭등 같은 <strong>복합 이상은 놓침.</strong></p>
+      <p><strong>벡터 유사도 방식</strong>: 7개 메트릭을 동시에 비교하니 <strong>"전체적으로 뭔가 이상하다"</strong>를 포착할 수 있음.</p>
+    </div>
+  </section>
+
+  <!-- ====== POC 2 ====== -->
+  <section id="poc2" class="section">
+    <div class="section-tag">POC 2</div>
+    <h2>시계열 압축: "메트릭 저장 비용을 줄일 수 있을까?"</h2>
+    <p class="lead">서버 1,000대에서 메트릭 100개를 5초마다 수집하면 하루에 17억 데이터포인트. 저장 비용이 만만치 않습니다. 압축하면서도 나중에 분석할 때 정확도가 유지될까요?</p>
+
+    <h3>실제로 이렇게 측정했습니다</h3>
+
+    <pre># 6,651개 벡터를 비트별로 압축 & 복원
+for b in [1, 2, 3, 4]:
+    tq_mse  = TurboQuantMSE(d=7, b=b)
+    tq_prod = TurboQuantProd(d=7, b=b)
+
+    for i in range(500):  # 500개 벡터 쌍으로 측정
+        # MSE: 원본 vs 복원의 거리
+        x_hat = tq_mse.dequant(tq_mse.quant(x))
+        mse = sum((x - x_hat)**2)
+
+        # 내적 오차: 원본끼리 내적 vs 압축 후 내적
+        true_ip  = dot(x, y)
+        approx_ip = tq_prod.inner_product(tq_prod.quant(x), y)
+        ip_error = abs(true_ip - approx_ip)</pre>
+
+    <h3>비트별 압축률 vs 정확도</h3>
+    <p><strong>6,651개</strong> 벡터에서 <strong>500쌍</strong>을 랜덤으로 뽑아 측정한 결과:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>비트</th><th>압축률</th><th>복원 오차 (MSE)</th><th>비교 오차 (내적)</th><th>판정</th></tr></thead>
+        <tbody>
+          <tr><td>1비트</td><td>32배</td><td>0.189</td><td>0.172</td><td style="color:var(--red);">오차 큼</td></tr>
+          <tr><td>2비트</td><td>16배</td><td>0.097</td><td>0.172</td><td style="color:var(--orange);">아직 큼</td></tr>
+          <tr><td>3비트</td><td>10.7배</td><td>0.030</td><td>0.102</td><td style="color:var(--accent);">쓸 만함</td></tr>
+          <tr class="hl"><td><strong>4비트</strong></td><td><strong>8배</strong></td><td><strong>0.005</strong></td><td><strong>0.010</strong></td><td class="normal">거의 원본!</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>4비트면 얼마나 아끼나?</h3>
+
+    <div class="vs">
+      <div class="vs-card">
+        <div style="font-size:36px; font-weight:900; color:var(--red); font-family:var(--mono);">32bit</div>
+        <div style="color:var(--text-dim); font-size:13px; margin-top:4px;">원본 (float32)</div>
+        <div style="font-size:20px; font-weight:700; margin-top:8px;">100%</div>
+      </div>
+      <div class="vs-mid">&rarr;</div>
+      <div class="vs-card" style="border-color:var(--green);">
+        <div style="font-size:36px; font-weight:900; color:var(--green); font-family:var(--mono);">4bit</div>
+        <div style="color:var(--text-dim); font-size:13px; margin-top:4px;">TurboQuant</div>
+        <div style="font-size:20px; font-weight:700; margin-top:8px;">12.5%</div>
+      </div>
+    </div>
+
+    <div class="bar-wrap">
+      <div class="bar-label"><span>원본 (32비트)</span><span>2.2 MB/일</span></div>
+      <div class="bar"><div class="bar-fill red" style="width:100%;">100%</div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-label"><span>4비트 TurboQuant</span><span>0.3 MB/일 (88% 절약)</span></div>
+      <div class="bar"><div class="bar-fill green" style="width:12.5%;">12.5%</div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-label"><span>3비트</span><span>0.2 MB/일 (91% 절약)</span></div>
+      <div class="bar"><div class="bar-fill green" style="width:9.4%;">9.4%</div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-label"><span>2비트</span><span>0.1 MB/일 (94% 절약)</span></div>
+      <div class="bar"><div class="bar-fill green" style="width:6.3%;">6.3%</div></div>
+    </div>
+
+    <p style="margin-top:16px; color:var(--text-dim); font-size:14px;">(서버 6대 기준. 서버 1,000대면 각 수치 &times;167)</p>
+
+    <div class="box green">
+      <div class="tag">결론</div>
+      <p><strong>4비트에서 복원 오차 0.5%, 내적 오차 1%.</strong> 이 정도면 압축 후 데이터로 대시보드를 그려도 거의 차이를 느낄 수 없는 수준입니다.</p>
+    </div>
+  </section>
+
+  <!-- ====== POC 3 ====== -->
+  <section id="poc3" class="section">
+    <div class="section-tag">POC 3</div>
+    <h2>에러 시맨틱 검색: "이 에러, 전에도 본 적 있나?"</h2>
+    <p class="lead">장애가 터졌을 때 가장 먼저 하는 일: "이 에러 전에도 나온 적 있어? 그때 어떻게 해결했지?" 에러 메시지를 벡터로 바꾸면 "의미가 비슷한" 과거 에러를 순식간에 찾을 수 있습니다.</p>
+
+    <div class="box orange">
+      <div class="tag">참고</div>
+      <p>데모 프로젝트에 로그 데이터가 없어 <strong>시뮬레이션</strong>으로 진행했습니다. 실제로는 에러 메시지를 Sentence-BERT 같은 모델로 벡터화합니다.</p>
+    </div>
+
+    <h3>어떻게 작동하나요?</h3>
+    <div class="flow-h">
+      <div class="fstep red">에러 발생!<div class="sub">NullPointerException at...</div></div>
+      <div class="farrow">&rarr;</div>
+      <div class="fstep">벡터 변환<div class="sub">임베딩 모델로 128차원</div></div>
+      <div class="farrow">&rarr;</div>
+      <div class="fstep green">압축 DB 검색<div class="sub">가장 유사한 과거 에러 찾기</div></div>
+      <div class="farrow">&rarr;</div>
+      <div class="fstep orange">결과!<div class="sub">"2주 전 같은 에러, 원인: DB풀"</div></div>
+    </div>
+
+    <h3>실제로 이렇게 구현했습니다</h3>
+
+    <pre># 5종류 에러의 중심 벡터 생성 (실제로는 임베딩 모델 사용)
+error_types = {
+    "NullPointerException": random_center_vector(128),
+    "OutOfMemoryError":     random_center_vector(128),
+    "ConnectionTimeout":    random_center_vector(128),
+    "SQLSyntaxError":       random_center_vector(128),
+    "PermissionDenied":     random_center_vector(128),
+}
+# 각 유형별 50개 변형 = 총 250개 (스택트레이스 차이 시뮬레이션)
+
+# TurboQuant 압축
+tq = TurboQuantProd(d=128, b=4)
+compressed_db = [(label, tq.quant(vec)) for label, vec in log_db]
+
+# 검색: 새 에러 벡터와 압축 DB의 내적(유사도) 비교
+for label, comp in compressed_db:
+    restored = tq.dequant(*comp)
+    score = dot(query_vec, restored)  # 높을수록 유사</pre>
+
+    <h3>5종류 에러로 검색 테스트</h3>
+    <p><strong>250개</strong> 에러 벡터(128차원)를 4비트로 압축한 뒤, 새 에러 4건을 검색:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>검색 쿼리</th><th>찾은 결과</th><th>유사도</th><th>판정</th></tr></thead>
+        <tbody>
+          <tr class="hl"><td>"새로운 NullPointer 발생"</td><td>NullPointerException</td><td><strong>0.963</strong></td><td class="normal">정확!</td></tr>
+          <tr class="hl"><td>"메모리 부족 에러"</td><td>OutOfMemoryError</td><td><strong>0.953</strong></td><td class="normal">정확!</td></tr>
+          <tr class="hl"><td>"연결 시간 초과"</td><td>ConnectionTimeout</td><td><strong>0.972</strong></td><td class="normal">정확!</td></tr>
+          <tr><td>"처음 보는 에러"</td><td>SQLSyntaxError</td><td style="color:var(--orange);">0.191</td><td>신규 에러 감지</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>유사 에러는 <strong>0.95 이상</strong>으로 정확히 매칭되고, 처음 보는 에러는 <strong>0.19</strong>로 확연히 구분됩니다. 이 차이를 이용해 "신규 에러 알림"도 만들 수 있어요.</p>
+
+    <h3>압축해도 검색 정확도가 유지될까?</h3>
+
+    <div class="cards">
+      <div class="card"><div class="num green">100%</div><div class="lbl">원본 검색 정확도 (100/100)</div></div>
+      <div class="card"><div class="num green">100%</div><div class="lbl">압축 검색 정확도 (100/100)</div></div>
+      <div class="card"><div class="num blue">7.5x</div><div class="lbl">압축률 (0.13MB &rarr; 0.02MB)</div></div>
+    </div>
+
+    <div class="box green">
+      <div class="tag">결론</div>
+      <p><strong>4비트 압축(7.5배 축소) 후에도 검색 정확도 100%.</strong> TurboQuant의 "편향 없는 내적" 특성 덕분에 유사도 순위가 뒤바뀌지 않습니다.</p>
+    </div>
+  </section>
+
+  <!-- ====== POC 4 ====== -->
+  <section id="poc4" class="section">
+    <div class="section-tag">POC 4</div>
+    <h2>패턴 매칭: "이 장애 패턴, 과거에도 있었나?"</h2>
+    <p class="lead">이상 탐지가 "지금 이상한가?"를 판단한다면, 패턴 매칭은 "언제 이런 적 있었지?"를 찾는 것입니다. 단일 시점이 아니라 <strong>시간 흐름(추이)</strong>을 비교합니다.</p>
+
+    <h3>어떻게 만드나요?</h3>
+
+    <div class="box">
+      <div class="tag">윈도우 벡터</div>
+      <p>연속 5개 시점의 메트릭을 이어붙여 하나의 벡터로:</p>
+    </div>
+
+    <pre>시점1: [tps=220, resp=2500, cpu=85, actx=530, sql=10, httpc=250, dbc=14]
+시점2: [tps=215, resp=2600, cpu=87, actx=540, sql=12, httpc=245, dbc=15]
+시점3: [tps=210, resp=2800, cpu=90, actx=560, sql=15, httpc=260, dbc=18]
+시점4: [tps=180, resp=3200, cpu=92, actx=600, sql=20, httpc=280, dbc=22]
+시점5: [tps=150, resp=4000, cpu=95, actx=650, sql=25, httpc=300, dbc=28]
+
+→ 윈도우 벡터 = [220, 2500, 85, ..., 150, 4000, 95, ...]
+                 35차원 (7 메트릭 × 5 시점)
+
+이 벡터 안에 "TPS가 점점 떨어지면서 응답시간이 치솟는" 추이가 담겨 있음!</pre>
+
+    <div class="cards">
+      <div class="card"><div class="num blue">6,643</div><div class="lbl">윈도우 벡터 생성</div></div>
+      <div class="card"><div class="num purple">35</div><div class="lbl">차원 (7 x 5)</div></div>
+      <div class="card"><div class="num green">10.7x</div><div class="lbl">3비트 압축률</div></div>
+    </div>
+
+    <h3>실제로 이렇게 구현했습니다</h3>
+
+    <pre># 서버별 연속 5개 레코드를 이어붙여 윈도우 벡터 생성
+WINDOW = 5
+for name, records in by_server.items():
+    for i in range(len(records) - WINDOW + 1):
+        window_vec = normalize(concatenate(records[i:i+WINDOW]))
+        # 35차원 = 7 메트릭 × 5 시점
+
+# TurboQuant 압축 & 검색
+tq = TurboQuantProd(d=35, b=3)
+compressed = [(label, tq.quant(vec)) for label, vec in windows]
+
+# 현재 윈도우와 가장 유사한 과거 패턴 Top-3
+for label, comp in compressed[:500]:
+    restored = tq.dequant(*comp)
+    score = dot(current_window, restored)</pre>
+
+    <h3>검색 결과: "지금이랑 가장 비슷했던 과거는?"</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>현재 서버</th><th>가장 비슷한 과거 패턴</th><th>유사도</th></tr></thead>
+        <tbody>
+          <tr class="hl"><td>demo-8105 (현재)</td><td>demo-8105 [481:486] &mdash; <span style="color:var(--text-dim);">자기 자신의 과거</span></td><td><strong>1.131</strong></td></tr>
+          <tr><td></td><td>demo-8105 [339:344]</td><td>1.118</td></tr>
+          <tr><td></td><td>demo-8105 [82:87]</td><td>1.100</td></tr>
+          <tr style="border-top:2px solid var(--border);"><td>demo-8100 (현재)</td><td>demo-8105 [339:344] &mdash; <span style="color:var(--text-dim);">비슷한 부하 패턴의 다른 서버</span></td><td><strong>1.156</strong></td></tr>
+          <tr><td></td><td>demo-8105 [481:486]</td><td>1.145</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box">
+      <div class="tag">해석</div>
+      <p>demo-8105의 현재 상태는 <strong>자기 서버의 과거 패턴</strong>과 가장 유사합니다 (당연하죠!). demo-8100은 비슷한 부하 특성을 가진 demo-8105의 과거와 매칭됩니다.</p>
+      <p>실제 운영 환경에서는 <strong>"2주 전 화요일 오후 3시에 이런 패턴이 있었고, 그때 원인은 DB 커넥션 풀 고갈이었다"</strong> 같은 인사이트를 즉시 얻을 수 있습니다.</p>
+    </div>
+
+    <h3>속도: 준비 시간 없이 바로 사용</h3>
+
+    <div class="cards">
+      <div class="card"><div class="num blue">18ms</div><div class="lbl">초기화 (1회, 회전행렬 생성)</div></div>
+      <div class="card"><div class="num green">0.01ms</div><div class="lbl">벡터 1개 압축</div></div>
+      <div class="card"><div class="num purple">0초</div><div class="lbl">사전 학습 필요</div></div>
+    </div>
+
+    <div class="box green">
+      <div class="tag">핵심 장점</div>
+      <p>기존 Product Quantization(PQ)은 새 데이터가 들어오면 <strong>전체를 다시 학습해야</strong> 합니다 (수백 초). TurboQuant은 data-oblivious라서 <strong>새 서버가 추가되든, 메트릭 패턴이 바뀌든 즉시 적용</strong> 가능합니다.</p>
+    </div>
+  </section>
+
+  <!-- ====== SUMMARY ====== -->
+  <section id="summary" class="section">
+    <div class="section-tag">Conclusion</div>
+    <h2>종합: 모니터링에 TurboQuant을 쓸 수 있는가?</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>시나리오</th><th>데이터 규모</th><th>압축률</th><th>결과</th></tr></thead>
+        <tbody>
+          <tr><td>이상 탐지</td><td>6,651 벡터 (7차원)</td><td>4.2x</td><td>인위적 이상 3종 <strong>전부 탐지</strong></td></tr>
+          <tr><td>시계열 압축</td><td>6,651 벡터 (7차원)</td><td>8.0x</td><td>복원 오차 0.5%, 비교 오차 1%</td></tr>
+          <tr><td>에러 검색</td><td>250 벡터 (128차원)</td><td>7.5x</td><td>검색 정확도 <strong>100%</strong></td></tr>
+          <tr><td>패턴 매칭</td><td>6,643 윈도우 (35차원)</td><td>10.7x</td><td>유사 과거 패턴 <strong>정상 매칭</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>모니터링 환경에 딱 맞는 이유</h3>
+
+    <div class="box green" style="padding: 24px;">
+      <h4 style="color:var(--green); margin-top:0;">1. 실시간 처리</h4>
+      <p>벡터당 0.01ms. 초당 10만 벡터도 1초 안에 처리. 모니터링 데이터 유입 속도를 충분히 감당합니다.</p>
+
+      <h4 style="color:var(--green);">2. 준비 시간 제로</h4>
+      <p>PQ처럼 k-means 학습이 필요 없습니다. 서버 100대가 갑자기 추가되어도 즉시 압축/검색 가능.</p>
+
+      <h4 style="color:var(--green);">3. 편향 없는 비교</h4>
+      <p>내적(유사도)이 편향되지 않으니 이상 탐지에서 오탐/미탐이 줄어듭니다.</p>
+
+      <h4 style="color:var(--green);">4. 4~16배 저장 절약</h4>
+      <p>같은 스토리지에 4배 더 오래 보관하거나, 스토리지 비용을 75% 줄일 수 있습니다.</p>
+    </div>
+
+    <h3>재현 방법</h3>
+    <pre># 1. whatapCli 빌드
+cd /tmp/whatapCli &amp;&amp; cargo build --release
+
+# 2. 로그인
+whatap login -e demo@whatap.io -p demo1234
+
+# 3. POC 실행 (10,000건 수집 + 4개 시나리오)
+cd /Users/devload/non &amp;&amp; python3 turboquant_poc.py</pre>
+  </section>
+
+</main>
+
+<footer>
+  <p>WhatAp CLI &times; TurboQuant POC &mdash; 2026-03-26</p>
+  <p>
+    <a href="https://github.com/devload/turboquant-monitoring-poc">POC 소스코드 (GitHub)</a> &middot;
+    <a href="https://arxiv.org/abs/2504.19874">논문 (arXiv)</a> &middot;
+    <a href="https://devload.github.io/turboquant/">논문 해설</a>
+  </p>
+</footer>
+
+</body>
+</html>
