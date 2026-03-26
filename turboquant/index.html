@@ -933,16 +933,70 @@
     </div>
 
     <h3>이 기술이 쓰이는 곳</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>활용 분야</th><th>설명</th><th>비유</th></tr></thead>
-        <tbody>
-          <tr><td><strong>AI 대화</strong></td><td>긴 대화를 기억하면서 메모리 절약</td><td>노트를 효율적으로 정리</td></tr>
-          <tr><td><strong>검색 엔진</strong></td><td>비슷한 문서를 빠르게 찾기</td><td>도서관에서 관련 책 찾기</td></tr>
-          <tr><td><strong>추천 시스템</strong></td><td>비슷한 상품/영상 추천</td><td>"이 영화 좋아하면 이것도!"</td></tr>
-          <tr><td><strong>대규모 DB</strong></td><td>벡터 데이터베이스 저장 공간 절약</td><td>창고 정리해서 4배 더 넣기</td></tr>
-        </tbody>
-      </table>
+
+    <h4>1. AI 대화 - "긴 대화도 끊김 없이"</h4>
+    <div class="analogy">
+      <div class="label">어떻게 쓰여?</div>
+      <p>ChatGPT한테 소설 한 권을 붙여넣고 "주인공 이름이 뭐야?"라고 물어본다고 해봐.</p>
+      <p>AI는 소설 전체를 <strong>KV 캐시</strong>에 저장해둬야 답할 수 있어. 근데 소설이 10만 토큰이면 메모리가 <strong>수십 GB</strong>나 필요해.</p>
+      <p>TurboQuant을 쓰면?</p>
+      <ul>
+        <li>AI가 문장을 <strong>읽는 순간 바로</strong> 3.5비트로 압축 (온라인!)</li>
+        <li>16비트 &rarr; 3.5비트 = 메모리 <strong>4.5배 절약</strong></li>
+        <li>그런데 "주인공 이름" 같은 질문에 대한 정답률은 <strong>99.7%로 그대로</strong></li>
+      </ul>
+      <p>결과: 같은 GPU로 <strong>4배 더 긴 글</strong>을 처리할 수 있거나, <strong>4배 더 싼 GPU</strong>로 같은 일을 할 수 있어!</p>
+    </div>
+
+    <h4>2. 검색 엔진 - "10억 개 문서에서 0.001초 만에 찾기"</h4>
+    <div class="analogy green">
+      <div class="label">어떻게 쓰여?</div>
+      <p>구글에서 "강아지 훈련법"을 검색하면, 수십억 개 웹페이지 중에서 관련된 걸 찾아야 해.</p>
+      <p>요즘 검색 엔진은 각 문서를 <strong>벡터(숫자 묶음)</strong>로 바꿔서 비교해. "강아지 훈련법"도 벡터로 바꾸고, 모든 문서 벡터와 <strong>내적(닮은 정도)</strong>을 계산해서 가장 비슷한 걸 찾는 거야.</p>
+      <p>문제: 문서 10억 개 &times; 1536차원 &times; 16비트 = <strong>약 3TB</strong> 메모리 필요!</p>
+      <p>TurboQuant(4비트)을 쓰면?</p>
+      <ul>
+        <li>3TB &rarr; <strong>750GB</strong>로 줄어듦</li>
+        <li>준비 시간: 기존 PQ는 몇 시간, TurboQuant은 <strong>0.002초</strong></li>
+        <li>새 문서가 추가돼도 <strong>재학습 없이</strong> 바로 압축 가능</li>
+        <li>검색 정확도는 오히려 <strong>더 높음</strong></li>
+      </ul>
+    </div>
+
+    <h4>3. 추천 시스템 - "이 영화 좋아하면 이것도 좋아할걸?"</h4>
+    <div class="analogy orange">
+      <div class="label">어떻게 쓰여?</div>
+      <p>넷플릭스나 유튜브가 영상을 추천하는 원리:</p>
+      <ul>
+        <li>모든 영상을 벡터로 변환 ("액션 0.8, 로맨스 0.2, 코미디 0.5, ...")</li>
+        <li>네가 본 영상들의 벡터 평균 = <strong>너의 취향 벡터</strong></li>
+        <li>취향 벡터와 <strong>내적이 가장 큰</strong> 영상 = 추천!</li>
+      </ul>
+      <p>영상이 1억 개면 벡터도 1억 개. TurboQuant으로 압축하면:</p>
+      <ul>
+        <li>서버 비용 <strong>4분의 1</strong></li>
+        <li>신작이 올라와도 <strong>즉시</strong> 추천 풀에 포함 (온라인이니까!)</li>
+        <li>편향 없는 내적 &rarr; 추천 순위가 <strong>안 뒤틀림</strong></li>
+      </ul>
+      <p>기존 PQ 방법은 신작이 올라올 때마다 <strong>전체를 다시 학습</strong>해야 했어. TurboQuant은 그냥 바로 넣으면 끝!</p>
+    </div>
+
+    <h4>4. 벡터 데이터베이스 - "창고를 4배 더 효율적으로"</h4>
+    <div class="analogy purple">
+      <div class="label">어떻게 쓰여?</div>
+      <p>요즘 AI 앱들은 <strong>벡터 DB</strong>(Pinecone, Qdrant, pgvector 등)를 써. 예를 들어:</p>
+      <ul>
+        <li>회사 내부 문서 10만 건을 벡터로 저장</li>
+        <li>"작년 매출 보고서 어디 있어?" &rarr; 질문을 벡터로 바꿔서 가장 비슷한 문서를 찾음</li>
+      </ul>
+      <p>벡터 DB의 가장 큰 비용은 <strong>메모리(RAM)</strong>야. 벡터가 RAM에 있어야 빠르게 검색하거든.</p>
+      <p>TurboQuant을 쓰면:</p>
+      <ul>
+        <li>같은 RAM에 <strong>4배 더 많은 벡터</strong> 저장 가능</li>
+        <li>= 서버 비용 <strong>75% 절감</strong></li>
+        <li>데이터가 실시간으로 들어와도 <strong>즉시 압축</strong> (재인덱싱 불필요)</li>
+        <li>Elasticsearch, Pinecone 같은 서비스에 바로 적용 가능</li>
+      </ul>
     </div>
   </section>
 
