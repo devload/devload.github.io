@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimesFM: 초등학생도 이해하는 시계열 예측 AI 해설</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+        :root {
+            --bg: #fefcf9;
+            --text: #2c2c2c;
+            --accent: #4a6cf7;
+            --accent-light: #e8eeff;
+            --green: #22c55e;
+            --green-light: #dcfce7;
+            --orange: #f59e0b;
+            --orange-light: #fef3c7;
+            --red: #ef4444;
+            --red-light: #fee2e2;
+            --purple: #8b5cf6;
+            --purple-light: #ede9fe;
+            --teal: #14b8a6;
+            --teal-light: #ccfbf1;
+            --gray: #6b7280;
+            --gray-light: #f3f4f6;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 17px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(254,252,249,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 0 24px;
+        }
+
+        nav .inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 24px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        nav .inner::-webkit-scrollbar { display: none; }
+
+        nav a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a.active { color: var(--accent); }
+
+        nav .logo {
+            font-weight: 900;
+            font-size: 16px;
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        .hero {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 100px 24px 48px;
+            text-align: center;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span { color: var(--accent); }
+
+        .hero .subtitle {
+            font-size: 18px;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+
+        .hero .meta {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        .chapter {
+            margin-top: 64px;
+            margin-bottom: 32px;
+            padding-top: 32px;
+            border-top: 3px solid var(--accent);
+        }
+
+        .chapter-num {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .chapter h2 {
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.3;
+        }
+
+        h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 28px;
+            margin-bottom: 8px;
+        }
+
+        p { margin-bottom: 16px; }
+
+        strong { font-weight: 700; }
+
+        .analogy {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding: 20px 24px;
+            margin: 20px 0;
+        }
+
+        .analogy.green { background: var(--green-light); border-color: var(--green); }
+        .analogy.orange { background: var(--orange-light); border-color: var(--orange); }
+        .analogy.purple { background: var(--purple-light); border-color: var(--purple); }
+        .analogy.red { background: var(--red-light); border-color: var(--red); }
+        .analogy.teal { background: var(--teal-light); border-color: var(--teal); }
+
+        .analogy .label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        .analogy .label.blue { color: var(--accent); }
+        .analogy .label.green { color: var(--green); }
+        .analogy .label.orange { color: var(--orange); }
+        .analogy .label.purple { color: var(--purple); }
+        .analogy .label.red { color: var(--red); }
+        .analogy .label.teal { color: var(--teal); }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #4a6cf7 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin: 28px 0;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .highlight-box h3, .highlight-box h4 { color: white; margin-top: 0; }
+        .highlight-box p { margin-bottom: 8px; }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        thead { background: var(--gray-light); }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray);
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover td { background: rgba(74,108,247,0.03); }
+
+        .winner { background: var(--green-light) !important; font-weight: 700; }
+
+        .flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 28px 0;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 280px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            font-size: 15px;
+        }
+
+        .flow-step.accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .flow-step.accent .flow-desc {
+            color: rgba(255,255,255,0.85);
+        }
+
+        .flow-step.purple-bg {
+            background: var(--purple);
+            color: white;
+            border-color: var(--purple);
+        }
+
+        .flow-step.green-bg {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: var(--accent);
+            line-height: 1;
+            padding: 4px 0;
+        }
+
+        .flow-desc {
+            font-size: 13px;
+            color: var(--gray);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin: 28px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .stat-card .unit {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .glossary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .glossary-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .glossary-item .term {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+
+        .glossary-item .def {
+            font-size: 14px;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .compare-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .compare-card h4 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .compare-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .compare-card ul li {
+            padding: 4px 0;
+            font-size: 15px;
+        }
+
+        .compare-card ul li::before {
+            content: "• ";
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .emoji-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .emoji-flow .arrow {
+            font-size: 24px;
+            color: var(--accent);
+        }
+
+        .emoji-flow .step {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-block .comment { color: #6c7086; }
+        .code-block .keyword { color: #cba6f7; }
+        .code-block .string { color: #a6e3a1; }
+        .code-block .number { color: #fab387; }
+
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--gray);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            body { font-size: 16px; }
+            .hero { padding: 80px 16px 36px; }
+            .hero h1 { font-size: 28px; }
+            .content { padding: 0 16px 60px; }
+            .compare-grid { grid-template-columns: 1fr; }
+            .glossary { grid-template-columns: 1fr; }
+            .flow-step { min-width: auto; max-width: 100%; padding: 12px 16px; font-size: 14px; }
+            .flow-desc { font-size: 12px; }
+            .chapter h2 { font-size: 24px; }
+            h3 { font-size: 20px; }
+            h4 { font-size: 16px; }
+            .highlight-box { padding: 20px 24px; }
+            .code-block { padding: 14px 16px; font-size: 13px; }
+            .walkthrough { padding: 18px 20px; }
+            .walkthrough .numbers { font-size: 12px; padding: 8px 12px; }
+            .table-wrap { margin: 16px -16px; border-radius: 0; border-left: 0; border-right: 0; }
+            .timeline { padding-left: 28px; }
+            .scenario-grid { grid-template-columns: 1fr; }
+            .emoji-flow .step { font-size: 13px; padding: 8px 12px; }
+        }
+
+        @media (max-width: 480px) {
+            body { font-size: 15px; line-height: 1.75; }
+            .hero { padding: 68px 14px 28px; }
+            .hero h1 { font-size: 24px; }
+            .hero .subtitle { font-size: 15px; }
+            .content { padding: 0 14px 48px; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-card .number { font-size: 24px; }
+            .stat-card .unit { font-size: 12px; }
+            .emoji-flow { font-size: 14px; gap: 4px; }
+            .emoji-flow .step { padding: 6px 10px; font-size: 12px; }
+            .emoji-flow .arrow { font-size: 18px; }
+            .attn-matrix { font-size: 11px; }
+            .attn-matrix td, .attn-matrix th { padding: 4px 6px; }
+            .chapter h2 { font-size: 22px; }
+            h3 { font-size: 18px; }
+            .analogy { padding: 14px 16px; }
+            .highlight-box { padding: 16px 18px; border-radius: 12px; }
+            .highlight-box h4 { font-size: 16px; }
+            .compare-card { padding: 14px 16px; }
+            .compare-card h4 { font-size: 15px; }
+            .flow-step { padding: 10px 14px; font-size: 13px; border-radius: 10px; }
+            .code-block { font-size: 11px; padding: 12px 14px; }
+            .walkthrough { padding: 14px 16px; border-radius: 12px; }
+            .walkthrough .numbers { font-size: 11px; }
+            .glossary-item { padding: 10px 14px; }
+            .glossary-item .term { font-size: 13px; }
+            .glossary-item .def { font-size: 13px; }
+            nav .inner { gap: 16px; }
+            nav a { font-size: 12px; }
+            .timeline-item .version { font-size: 16px; }
+            .scenario-card { padding: 14px 16px; }
+            .scenario-card .icon { font-size: 24px; }
+        }
+
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+
+        /* Attention matrix visualization */
+        .attn-matrix {
+            border-collapse: collapse;
+            margin: 16px auto;
+            font-size: 15px;
+        }
+        .attn-matrix th {
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 8px 14px;
+            font-size: 14px;
+            text-transform: none;
+            letter-spacing: 0;
+            border: 1px solid var(--border);
+        }
+        .attn-matrix td {
+            padding: 8px 14px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .attn-matrix .see { background: var(--green-light); font-weight: 700; }
+        .attn-matrix .blind { background: var(--gray-light); color: var(--gray); }
+
+        /* Number walkthrough */
+        .walkthrough {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 24px 0;
+            box-shadow: var(--shadow-lg);
+        }
+        .walkthrough h4 { margin-top: 0; color: var(--accent); }
+        .walkthrough .step-label {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .walkthrough .numbers {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            background: var(--gray-light);
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .walkthrough .arrow-down {
+            text-align: center;
+            font-size: 20px;
+            color: var(--accent);
+            padding: 4px 0;
+        }
+
+        /* Scenario cards */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .scenario-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s;
+        }
+        .scenario-card:hover { box-shadow: var(--shadow-lg); }
+        .scenario-card .icon { font-size: 32px; margin-bottom: 8px; }
+        .scenario-card h4 { margin-top: 0; margin-bottom: 8px; }
+        .scenario-card p { font-size: 15px; color: var(--gray); margin-bottom: 0; }
+
+        /* Version timeline */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+            margin: 24px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-light);
+            border-radius: 2px;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 3px solid var(--accent-light);
+        }
+        .timeline-item.current::before {
+            background: var(--green);
+            border-color: var(--green-light);
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.2);
+        }
+        .timeline-item .version {
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--accent);
+        }
+        .timeline-item.current .version { color: var(--green); }
+        .timeline-item .detail {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 2px;
+        }
+
+        /* Reading time badge */
+        .reading-time {
+            display: inline-block;
+            background: var(--gray-light);
+            color: var(--gray);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="inner">
+        <span class="logo">TFM</span>
+        <a href="#ch0">소개</a>
+        <a href="#ch1">문제</a>
+        <a href="#ch2">핵심 아이디어</a>
+        <a href="#ch3">작동 원리</a>
+        <a href="#ch4">학습 방법</a>
+        <a href="#ch5">성능</a>
+        <a href="#ch6">정리</a>
+        <a href="#glossary">용어사전</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="badge">논문 + 모델 + 라이브러리 &middot; ICML 2024 &middot; Google Research</div>
+    <h1>TimesFM<br><span>초등학생도 이해하는</span><br>시계열 예측 AI 해설</h1>
+    <p class="subtitle">내일 날씨, 다음 달 주가, 내년 전기 사용량... AI가 "과거 패턴"만 보고 미래를 척척 맞추는 비법!</p>
+    <p class="meta">원본 논문: <strong>A Decoder-Only Foundation Model for Time-Series Forecasting</strong><br>Abhimanyu Das, Weihao Kong, Rajat Sen, Yichen Zhou (arXiv:2310.10688)</p>
+    <span class="reading-time">약 15분 소요</span>
+</section>
+
+<div class="content">
+
+    <!-- ===== Chapter 0: 소개 ===== -->
+    <div class="chapter" id="ch0">
+        <div class="chapter-num">Chapter 0</div>
+        <h2>이 논문이 뭔데?</h2>
+    </div>
+
+    <p><strong>TimesFM</strong>은 Google이 만든 <strong>"시계열 예측 전용 AI"</strong>예요. 그런데 TimesFM이라는 이름은 사실 3가지를 동시에 가리켜요:</p>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">📄</div>
+            <div class="unit"><strong>논문</strong><br>아이디어와 실험 결과를<br>담은 학술 논문 (ICML 2024)</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">🧠</div>
+            <div class="unit"><strong>사전학습 모델</strong><br>1000억 시점으로 이미 학습된<br>AI 두뇌 (HuggingFace 공개)</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">📦</div>
+            <div class="unit"><strong>Python 라이브러리</strong><br><code>pip install timesfm</code>으로<br>바로 쓸 수 있는 도구</div>
+        </div>
+    </div>
+
+    <div class="analogy">
+        <div class="label blue">쉬운 비유</div>
+        <strong>논문</strong> = 요리 레시피 (이론과 방법)<br>
+        <strong>모델</strong> = 이미 만들어진 요리 (바로 먹을 수 있음)<br>
+        <strong>라이브러리</strong> = 요리가 담긴 배달 앱 (코드 한 줄로 주문!)<br><br>
+        이 문서에서는 주로 <strong>논문의 아이디어(레시피)</strong>를 쉽게 설명할 거예요!
+    </div>
+
+    <p>"시계열"이란 <strong>시간 순서대로 기록된 숫자들</strong>을 말해요.</p>
+
+    <div class="analogy green">
+        <div class="label green">쉬운 비유</div>
+        <strong>시계열 = 매일 재는 키 기록표!</strong><br>
+        1월에 130cm, 2월에 131cm, 3월에 132cm... 이렇게 시간 순서대로 적은 숫자가 바로 시계열이에요. TimesFM은 이런 기록을 보고 "4월에는 133cm가 되겠다!"라고 맞추는 AI예요.
+    </div>
+
+    <p>이런 시계열 데이터는 우리 주변에 아주 많아요:</p>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">🌡️</div>
+            <div class="unit">매시간 기온</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">📈</div>
+            <div class="unit">매일 주가</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">⚡</div>
+            <div class="unit">매달 전기 사용량</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">🚗</div>
+            <div class="unit">매시간 교통량</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">🔍</div>
+            <div class="unit">매일 검색 트렌드</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">🏥</div>
+            <div class="unit">매주 환자 수</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <h4>TimesFM이 특별한 이유</h4>
+        <p>기존 AI는 "전기 사용량 예측용", "주가 예측용"처럼 각각 따로 학습해야 했어요.</p>
+        <p>TimesFM은 <strong>한 번 학습하면 어떤 시계열이든 바로 예측</strong>할 수 있어요!</p>
+        <p>마치 <strong>만능 통역사</strong>가 어떤 언어든 바로 통역하는 것처럼요.</p>
+    </div>
+
+    <h3>숫자로 보는 TimesFM</h3>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">200M</div>
+            <div class="unit">파라미터 (AI의 뇌세포)</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">1000억</div>
+            <div class="unit">학습한 데이터 포인트</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">20</div>
+            <div class="unit">Transformer 층 수</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">16K</div>
+            <div class="unit">최대 입력 길이 (v2.5)</div>
+        </div>
+    </div>
+
+    <!-- ===== Chapter 1: 문제 ===== -->
+    <div class="chapter" id="ch1">
+        <div class="chapter-num">Chapter 1</div>
+        <h2>기존 방법의 문제점</h2>
+    </div>
+
+    <p>미래를 예측하는 건 정말 어려운 일이에요. 지금까지 어떤 방법들이 있었고, 뭐가 문제였는지 볼까요?</p>
+
+    <h3>방법 1: 통계 방법 (ARIMA 등)</h3>
+
+    <div class="analogy orange">
+        <div class="label orange">쉬운 비유</div>
+        <strong>공식 하나로 맞추기 = 자 하나로 그림 그리기</strong><br>
+        직선이나 간단한 패턴은 잘 그리지만, 복잡한 곡선이나 갑자기 변하는 모양은 못 그려요.
+    </div>
+
+    <p><strong>장점:</strong> 간단하고 빠르다<br>
+    <strong>단점:</strong> 복잡한 패턴은 못 잡는다. 매번 데이터마다 새로 설정해야 한다.</p>
+
+    <h3>방법 2: 딥러닝 모델 (DeepAR, PatchTST 등)</h3>
+
+    <div class="analogy purple">
+        <div class="label purple">쉬운 비유</div>
+        <strong>전용 AI = 과목별 과외 선생님</strong><br>
+        수학 과외 선생님은 수학만 가르칠 수 있어요. 영어를 가르치려면 다른 선생님을 다시 구해야 해요. 매번 새로운 데이터마다 처음부터 학습시켜야 해요.
+    </div>
+
+    <p><strong>장점:</strong> 복잡한 패턴도 잘 잡는다<br>
+    <strong>단점:</strong> 새 데이터마다 처음부터 학습 필요. 시간과 비용이 많이 든다.</p>
+
+    <h3>방법 3: LLM 활용 (GPT로 예측)</h3>
+
+    <div class="analogy red">
+        <div class="label red">쉬운 비유</div>
+        <strong>글짓기 선생님에게 수학 문제 풀게 하기</strong><br>
+        GPT는 글을 잘 쓰지만, 숫자 패턴을 이해하는 데는 효율적이지 않아요. 숫자를 텍스트로 바꿔야 해서 느리고, 모델도 너무 커요.
+    </div>
+
+    <p><strong>장점:</strong> 이미 만들어져 있다<br>
+    <strong>단점:</strong> 숫자를 글자로 변환해야 해서 비효율적. 모델이 수백~수천억 파라미터로 너무 크다.</p>
+
+    <div class="highlight-box">
+        <h4>그래서 TimesFM이 필요해!</h4>
+        <p>통계 방법처럼 <strong>빠르고</strong></p>
+        <p>딥러닝처럼 <strong>똑똑하고</strong></p>
+        <p>LLM처럼 <strong>범용적이지만</strong></p>
+        <p>LLM보다 <strong>훨씬 작고 효율적인</strong> 모델!</p>
+    </div>
+
+    <!-- ===== Chapter 2: 핵심 아이디어 ===== -->
+    <div class="chapter" id="ch2">
+        <div class="chapter-num">Chapter 2</div>
+        <h2>TimesFM의 핵심 아이디어 3가지</h2>
+    </div>
+
+    <h3>핵심 1: 패칭 (Patching) - 숫자를 묶어서 보기</h3>
+
+    <p>시계열 숫자를 하나씩 보면 너무 느려요. TimesFM은 숫자들을 <strong>32개씩 묶어서</strong> 한 번에 봐요. 이 묶음을 <strong>"패치(Patch)"</strong>라고 불러요.</p>
+
+    <div class="analogy green">
+        <div class="label green">쉬운 비유</div>
+        <strong>패칭 = 책 읽기 방법의 차이!</strong><br>
+        한 글자씩 읽기: ㅎ-ㅏ-ㄴ-ㄱ-ㅜ-ㄱ-... (너무 느려! 😩)<br>
+        단어씩 읽기: 한국-사람-이라면-... (빠르고 의미도 잘 파악! 😊)<br><br>
+        TimesFM은 숫자 32개를 한 단어처럼 묶어서 읽어요!
+    </div>
+
+    <div class="emoji-flow">
+        <span class="step">📊 숫자 128개</span>
+        <span class="arrow">→</span>
+        <span class="step">📦 32개씩 묶기</span>
+        <span class="arrow">→</span>
+        <span class="step">🧩 패치 4개</span>
+    </div>
+
+    <h4>비대칭 패칭 - 진짜 똑똑한 부분!</h4>
+
+    <p>TimesFM의 비밀 무기는 <strong>"입력은 작게, 출력은 크게"</strong> 하는 거예요.</p>
+
+    <div class="compare-grid">
+        <div class="compare-card">
+            <h4>📥 입력 패치</h4>
+            <ul>
+                <li>크기: <strong>32개</strong> 숫자</li>
+                <li>과거 데이터를 읽을 때</li>
+                <li>세밀하게 패턴을 파악</li>
+            </ul>
+        </div>
+        <div class="compare-card">
+            <h4>📤 출력 패치</h4>
+            <ul>
+                <li>크기: <strong>128개</strong> 숫자</li>
+                <li>미래를 예측할 때</li>
+                <li>한 번에 많이 예측!</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="analogy orange">
+        <div class="label orange">왜 이렇게 할까?</div>
+        시험 볼 때 문제를 <strong>한 줄씩 꼼꼼히</strong> 읽지만, 답은 <strong>한 번에 쭉</strong> 쓰잖아요?<br>
+        입력은 꼼꼼히(32개), 출력은 시원하게(128개) — 이래야 빠르고 정확해요!<br><br>
+        만약 128개를 예측해야 하는데 32개씩 출력하면 <strong>4번</strong> 반복해야 하지만, 128개씩 출력하면 <strong>1번</strong>이면 돼요. 반복할수록 오차가 쌓이니까, 적게 반복할수록 좋아요!
+    </div>
+
+    <h3>핵심 2: Decoder-Only Transformer - ChatGPT랑 같은 구조!</h3>
+
+    <p>TimesFM은 ChatGPT와 <strong>같은 종류의 뇌 구조</strong>를 써요. 다만 글자 대신 <strong>숫자 패치</strong>를 처리해요.</p>
+
+    <div class="analogy">
+        <div class="label blue">쉬운 비유</div>
+        <strong>Transformer = 교실의 토론!</strong><br><br>
+        교실에 학생(패치)들이 앉아 있어요. 선생님이 "자, 앞에 있는 친구들의 발표를 듣고 다음 내용을 예측해봐!" 하면, 맨 뒤 학생이 앞의 모든 발표를 참고해서 답을 말해요.<br><br>
+        이게 바로 <strong>"Causal Self-Attention"</strong> — 각 패치는 자기 <strong>앞에 있는 패치만</strong> 참고할 수 있어요. (뒤는 아직 미래니까 못 봐요!)
+    </div>
+
+    <h3>핵심 3: 제로샷 (Zero-Shot) - 한 번 배우면 다 할 수 있어!</h3>
+
+    <div class="analogy teal">
+        <div class="label teal">쉬운 비유</div>
+        <strong>제로샷 = 만능 운동선수!</strong><br><br>
+        보통 선수는 축구만, 농구만 연습해요. 하지만 만능 운동선수는 <strong>기본기가 탄탄해서</strong> 처음 보는 스포츠도 곧잘 해요.<br><br>
+        TimesFM은 1000억 개의 다양한 숫자 패턴을 배워서, 처음 보는 데이터도 <strong>추가 학습 없이</strong> 바로 예측할 수 있어요!
+    </div>
+
+    <!-- ===== Chapter 3: 작동 원리 ===== -->
+    <div class="chapter" id="ch3">
+        <div class="chapter-num">Chapter 3</div>
+        <h2>TimesFM은 어떻게 작동하나요?</h2>
+    </div>
+
+    <p>과거 데이터가 들어오면 미래 예측이 나올 때까지, 단계별로 따라가 볼게요!</p>
+
+    <h3>전체 흐름도</h3>
+
+    <div class="flow">
+        <div class="flow-step">
+            📊 입력: 과거 시계열 데이터<br>
+            <span class="flow-desc">[10, 12, 15, 13, 18, 20, 22, ...]</span>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-step">
+            ✂️ Step 1: 패칭 (32개씩 자르기)<br>
+            <span class="flow-desc">128개 숫자 → 패치 4개</span>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-step">
+            🔄 Step 2: Residual Block (MLP)<br>
+            <span class="flow-desc">각 패치를 1280차원 벡터로 변환</span>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-step">
+            📍 Step 3: 위치 인코딩 추가<br>
+            <span class="flow-desc">"너는 1번째, 너는 2번째..." 순서 알려주기</span>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-step accent">
+            🧠 Step 4: Transformer 20층 통과!<br>
+            <span class="flow-desc">각 패치가 앞의 패치들을 참고하며 패턴 파악</span>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-step">
+            🔄 Step 5: 출력 Residual Block<br>
+            <span class="flow-desc">1280차원 → 128개 숫자로 변환</span>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-step green-bg">
+            🎯 출력: 미래 128개 시점 예측!<br>
+            <span class="flow-desc" style="color:rgba(255,255,255,0.85)">[23, 25, 24, 27, 30, ...]</span>
+        </div>
+    </div>
+
+    <h3>Step 1~5: 숫자로 직접 따라가 보기!</h3>
+
+    <p>간단한 예시로 전체 과정을 숫자와 함께 따라가 볼게요. (실제로는 32개씩이지만, 이해하기 쉽게 <strong>4개씩</strong>으로 줄여서 보여줄게요!)</p>
+
+    <div class="walkthrough">
+        <h4>숫자 워크스루: 8개 숫자로 미래 4개 예측하기</h4>
+
+        <div class="step-label">Step 1: 패칭</div>
+        <p>8개 숫자를 4개씩 2묶음으로 나눠요</p>
+        <div class="numbers">입력: [10, 20, 15, 25, 30, 20, 35, 40]</div>
+        <div class="arrow-down">▼ 4개씩 자르기</div>
+        <div class="numbers">패치1 = [10, 20, 15, 25]&nbsp;&nbsp;&nbsp;패치2 = [30, 20, 35, 40]</div>
+
+        <div class="arrow-down">▼</div>
+
+        <div class="step-label">Step 2: Residual Block</div>
+        <p>각 패치(4개 숫자)를 AI의 언어(1280차원 벡터)로 번역</p>
+        <div class="numbers">패치1 [10,20,15,25] → MLP → [0.32, -0.15, 0.87, ..., 0.44] (1280개)</div>
+        <div class="numbers">패치2 [30,20,35,40] → MLP → [0.71, 0.23, -0.56, ..., 0.18] (1280개)</div>
+
+        <div class="arrow-down">▼</div>
+
+        <div class="step-label">Step 3: 위치 인코딩</div>
+        <p>각 벡터에 순서 정보를 더해요</p>
+        <div class="numbers">패치1 벡터 + PE(1번째) = 토큰1</div>
+        <div class="numbers">패치2 벡터 + PE(2번째) = 토큰2</div>
+
+        <div class="arrow-down">▼</div>
+
+        <div class="step-label">Step 4: Transformer 20층</div>
+        <p>토큰들이 서로 참고하며 패턴을 파악 (20번 반복!)</p>
+        <div class="numbers">토큰1: "나는 혼자 생각..." → 출력1</div>
+        <div class="numbers">토큰2: "토큰1을 참고하면... 올라갔다 내렸다 올라가는 패턴!" → 출력2</div>
+
+        <div class="arrow-down">▼</div>
+
+        <div class="step-label">Step 5: 출력 Residual Block</div>
+        <p>마지막 토큰(출력2)을 다시 숫자로 변환</p>
+        <div class="numbers">출력2 [0.91, -0.33, ...] → MLP → [42, 38, 45, 50]</div>
+        <div class="arrow-down">🎯</div>
+        <div class="numbers" style="background: var(--green-light); font-weight: 700;">예측 결과: [42, 38, 45, 50] ← 미래 4개 시점!</div>
+    </div>
+
+    <h3>실제 스케일에서는?</h3>
+
+    <p>위의 예시는 이해를 위해 줄인 거고, 실제로는:</p>
+
+    <div class="code-block">
+        <span class="comment"># 실제: 128개 숫자를 32개씩 4묶음으로</span><br>
+        시계열 = [<span class="number">10, 12, 15, ..., 22</span>] <span class="comment"># 128개</span><br>
+        <br>
+        패치1 = [<span class="number">10, 12, 15, ..., 18</span>] <span class="comment"># 1~32번째</span><br>
+        패치2 = [<span class="number">20, 22, 19, ..., 25</span>] <span class="comment"># 33~64번째</span><br>
+        패치3 = [<span class="number">27, 30, 28, ..., 33</span>] <span class="comment"># 65~96번째</span><br>
+        패치4 = [<span class="number">35, 38, 36, ..., 40</span>] <span class="comment"># 97~128번째</span><br>
+        <br>
+        <span class="comment"># 마지막 패치4의 출력 → 미래 128개 시점 예측!</span>
+    </div>
+
+    <h3>Step 2: Residual Block - 숫자를 AI가 이해하는 언어로</h3>
+
+    <p>패치(32개 숫자)를 AI가 이해하는 <strong>1280차원 벡터</strong>로 바꿔요.</p>
+
+    <div class="analogy purple">
+        <div class="label purple">쉬운 비유</div>
+        <strong>Residual Block = 번역기!</strong><br>
+        우리가 쓰는 한국어(숫자 32개)를 AI의 언어(1280차원 벡터)로 번역해요.<br><br>
+        <strong>"Residual"이 뭐냐면:</strong> 번역할 때 원본도 함께 보관하는 거예요. 마치 시험지에 답을 쓸 때 <strong>문제도 같이 보면서</strong> 쓰는 것처럼! 이래야 정보를 잃어버리지 않아요.
+    </div>
+
+    <h3>Step 3: 위치 인코딩 - 순서표 붙이기</h3>
+
+    <div class="analogy green">
+        <div class="label green">쉬운 비유</div>
+        <strong>위치 인코딩 = 줄 서기 번호표!</strong><br>
+        놀이공원에서 줄을 서면 번호표를 받잖아요? AI도 각 패치에 "너는 1번째, 너는 2번째"라고 번호를 붙여야 <strong>순서를 기억</strong>해요. 시계열에서 순서는 매우 중요하거든요!
+    </div>
+
+    <h3>Step 4: Transformer 20층 - 핵심 두뇌!</h3>
+
+    <p>이 부분이 TimesFM의 <strong>진짜 두뇌</strong>예요. 20개 층을 겹겹이 쌓아서 패턴을 깊이 이해해요.</p>
+
+    <p>각 층에서는 두 가지 작업을 해요:</p>
+
+    <h4>1) Causal Self-Attention (인과적 셀프 어텐션)</h4>
+
+    <div class="analogy">
+        <div class="label blue">쉬운 비유</div>
+        <strong>어텐션 = 토론 시간!</strong><br><br>
+        패치들이 서로 대화하는 시간이에요. 하지만 규칙이 있어요:<br>
+        - 패치 1은 혼자만 생각해요 (앞에 아무도 없으니까)<br>
+        - 패치 2는 패치 1의 말을 참고해요<br>
+        - 패치 3은 패치 1, 2의 말을 참고해요<br>
+        - 패치 4는 패치 1, 2, 3의 말을 모두 참고해요<br><br>
+        <strong>절대 뒤를 보면 안 돼요!</strong> 미래 정보를 미리 보면 컨닝이니까요. 이게 <strong>"Causal(인과적)"</strong>이라는 뜻이에요.
+    </div>
+
+    <h4>어텐션 마스크 - 누가 누구를 볼 수 있을까?</h4>
+
+    <p>4개 패치가 있을 때, 누가 누구를 참고할 수 있는지 표로 볼게요:</p>
+
+    <div class="table-wrap">
+        <table class="attn-matrix">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>패치1 보기</th>
+                    <th>패치2 보기</th>
+                    <th>패치3 보기</th>
+                    <th>패치4 보기</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>패치1</th>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="blind">X 미래!</td>
+                    <td class="blind">X 미래!</td>
+                    <td class="blind">X 미래!</td>
+                </tr>
+                <tr>
+                    <th>패치2</th>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="blind">X 미래!</td>
+                    <td class="blind">X 미래!</td>
+                </tr>
+                <tr>
+                    <th>패치3</th>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="blind">X 미래!</td>
+                </tr>
+                <tr>
+                    <th>패치4</th>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="see">O 볼 수 있음</td>
+                    <td class="see">O 볼 수 있음</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>왼쪽 아래 초록색 삼각형 모양이 보이죠? 이걸 <strong>"Causal Mask (인과적 마스크)"</strong>라고 불러요. 미래(오른쪽 위)는 절대 볼 수 없어요!</p>
+
+    <p><strong>16개 어텐션 헤드</strong>를 사용해요. 이건 16명의 전문가가 각각 다른 관점으로 패턴을 분석하는 거예요.</p>
+
+    <div class="analogy orange">
+        <div class="label orange">쉬운 비유</div>
+        <strong>16개 헤드 = 16명의 탐정!</strong><br>
+        탐정 1: "이 숫자들, 점점 올라가는 추세야!" (트렌드 전문)<br>
+        탐정 2: "매주 월요일마다 숫자가 올라가네!" (계절성 전문)<br>
+        탐정 3: "갑자기 튀는 값이 있어!" (이상치 전문)<br>
+        ...<br>
+        16명이 각자 다른 패턴을 찾아내고, 합쳐서 종합 판단해요!
+    </div>
+
+    <h4>2) Feed-Forward Network (피드포워드 네트워크)</h4>
+
+    <p>어텐션에서 수집한 정보를 <strong>깊이 처리</strong>하는 단계예요. 간단히 말해 "생각하는 시간"이에요.</p>
+
+    <h3>Step 5: 출력 - 미래 예측!</h3>
+
+    <p>마지막 패치의 출력(1280차원 벡터)을 다시 <strong>128개 숫자</strong>로 변환하면, 그게 바로 미래 예측이에요!</p>
+
+    <h4>더 먼 미래가 필요하면? - 오토리그레시브 디코딩</h4>
+
+    <div class="analogy teal">
+        <div class="label teal">쉬운 비유</div>
+        <strong>오토리그레시브 = 이어달리기!</strong><br><br>
+        128개를 예측했으면, 그걸 다시 입력에 붙여서 그 다음 128개를 예측해요.<br><br>
+        과거 데이터 [1~128] → 예측 [129~256]<br>
+        과거 + 예측 [1~256] → 예측 [257~384]<br>
+        과거 + 예측 [1~384] → 예측 [385~512]<br><br>
+        이어달리기처럼 예측한 결과를 바통 삼아 계속 이어가요!
+    </div>
+
+    <!-- ===== Chapter 4: 학습 방법 ===== -->
+    <div class="chapter" id="ch4">
+        <div class="chapter-num">Chapter 4</div>
+        <h2>어떻게 학습했나요?</h2>
+    </div>
+
+    <h3>학습 데이터: 1000억 개의 숫자!</h3>
+
+    <p>TimesFM은 엄청나게 많은 시계열 데이터로 학습했어요.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>데이터 소스</th>
+                    <th>설명</th>
+                    <th>시간 단위</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Google Trends</strong></td>
+                    <td>22,000개 인기 검색어의 검색량 (2007~2022)</td>
+                    <td>시간, 일, 주, 월</td>
+                </tr>
+                <tr>
+                    <td><strong>Wikipedia</strong></td>
+                    <td>위키백과 페이지별 방문자 수 (2012~2023)</td>
+                    <td>시간 → 다양</td>
+                </tr>
+                <tr>
+                    <td><strong>공개 데이터</strong></td>
+                    <td>M4(10만개), 전기사용량(300+), 교통량(800+), 날씨</td>
+                    <td>다양</td>
+                </tr>
+                <tr>
+                    <td><strong>합성 데이터</strong></td>
+                    <td>컴퓨터가 만든 300만 개 시리즈 (× 2048 시점)</td>
+                    <td>다양</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>합성 데이터 = 문제집 만들기!</h3>
+
+    <div class="analogy purple">
+        <div class="label purple">쉬운 비유</div>
+        <strong>합성 데이터 = AI용 수학 문제집!</strong><br>
+        실제 시험(실제 데이터)만으로는 연습이 부족해서, 선생님이 <strong>다양한 유형의 연습문제</strong>를 만들어 줬어요. 4가지 유형을 섞어서 만들어요:
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">📈</div>
+            <div class="unit"><strong>트렌드</strong><br>올라가거나 내려가는 흐름</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">🔄</div>
+            <div class="unit"><strong>계절성</strong><br>반복되는 패턴 (sin/cos)</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">📊</div>
+            <div class="unit"><strong>노이즈</strong><br>랜덤 변동 (ARMA)</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">⚡</div>
+            <div class="unit"><strong>급변</strong><br>갑자기 확 바뀌는 값</div>
+        </div>
+    </div>
+
+    <p><strong>혼합 비율:</strong> 실제 데이터 50% + 합성 데이터 50%</p>
+
+    <h3>컨텍스트 마스킹 - 가변 길이 학습의 비밀</h3>
+
+    <div class="analogy orange">
+        <div class="label orange">쉬운 비유</div>
+        <strong>마스킹 = 문제의 일부를 가리기!</strong><br><br>
+        시험 공부할 때 문제를 전부 보고 풀기도 하고, 앞부분을 가리고 뒷부분만 보고 풀기도 해요. 이렇게 다양한 길이의 입력에 익숙해지면, 실전에서 어떤 길이의 데이터가 와도 당황하지 않아요!<br><br>
+        학습할 때마다 랜덤으로 앞부분을 가려서, <strong>1개부터 최대 512개까지</strong> 모든 길이에 대비시켜요.
+    </div>
+
+    <h3>손실 함수 = 채점 기준</h3>
+
+    <p>AI가 얼마나 잘 맞췄는지 점수를 매기는 기준이에요.</p>
+
+    <div class="analogy green">
+        <div class="label green">쉬운 비유</div>
+        <strong>MSE = 오답노트의 점수!</strong><br><br>
+        AI가 "25"라고 예측했는데 정답이 "20"이면, 차이는 5이고, 이걸 제곱하면 25점 감점!<br>
+        (25-20)² = 25 <br><br>
+        모든 예측에 대해 이런 점수를 매기고 평균 내요. 이 점수가 <strong>작을수록</strong> AI가 잘 맞춘 거예요!<br>
+        학습하면서 이 점수를 계속 줄여나가요.
+    </div>
+
+    <!-- ===== Chapter 5: 성능 ===== -->
+    <div class="chapter" id="ch5">
+        <div class="chapter-num">Chapter 5</div>
+        <h2>얼마나 잘 맞추나요?</h2>
+    </div>
+
+    <p>TimesFM은 <strong>아무런 추가 학습 없이(제로샷)</strong> 기존 모델들과 비교했어요.</p>
+
+    <h3>벤치마크 결과 요약</h3>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>벤치마크</th>
+                    <th>데이터셋 수</th>
+                    <th>결과</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Monash Archive</strong></td>
+                    <td>18개</td>
+                    <td class="winner">상위 3위! DeepAR, GPT-3 등을 이김</td>
+                </tr>
+                <tr>
+                    <td><strong>Darts</strong></td>
+                    <td>8개</td>
+                    <td class="winner">통계 모델(ARIMA)과 동등 수준</td>
+                </tr>
+                <tr>
+                    <td><strong>ETT (장기 예측)</strong></td>
+                    <td>4개 (8태스크)</td>
+                    <td class="winner">8개 태스크 모두 1위! (PatchTST도 이김)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="highlight-box">
+        <h4>이게 왜 대단한 건데?</h4>
+        <p><strong>DeepAR, PatchTST</strong> = 각 데이터셋에서 열심히 학습한 전문 모델</p>
+        <p><strong>TimesFM</strong> = 한 번도 그 데이터를 본 적 없는 범용 모델</p>
+        <p>처음 보는 시험인데 전교 1등한 거예요! 🏆</p>
+    </div>
+
+    <h3>LLMTime(GPT-3) vs TimesFM</h3>
+
+    <div class="analogy">
+        <div class="label blue">왜 GPT-3이랑 비교해?</div>
+        GPT-4나 GPT-4o가 아니라 GPT-3인 이유가 있어요. <strong>LLMTime</strong>이라는 논문(2023)이 "LLM으로도 시계열 예측을 할 수 있다!"를 처음 보여줬는데, 그 논문이 GPT-3를 사용했어요. TimesFM 논문 시점(2023.10)에 <strong>"LLM 기반 시계열 예측"의 대표 연구</strong>가 바로 이 LLMTime이었기 때문에, "우리 방식이 LLM 방식보다 낫다"를 증명하기 위한 비교예요.
+    </div>
+
+    <div class="compare-grid">
+        <div class="compare-card">
+            <h4>LLMTime (GPT-3 기반)</h4>
+            <ul>
+                <li>파라미터: <strong>1750억 개</strong></li>
+                <li>숫자를 글자로 변환해서 처리</li>
+                <li>시계열 전용이 아님</li>
+                <li>느리고 비싸다</li>
+            </ul>
+        </div>
+        <div class="compare-card">
+            <h4>TimesFM</h4>
+            <ul>
+                <li>파라미터: <strong>2억 개</strong> (875배 작음!)</li>
+                <li>숫자를 숫자 그대로 처리</li>
+                <li>시계열 전용 설계</li>
+                <li>빠르고 효율적</li>
+            </ul>
+        </div>
+    </div>
+
+    <p>TimesFM이 GPT-3 기반 LLMTime보다 <strong>875배 작으면서도 10% 이상 더 정확</strong>해요!</p>
+
+    <h3>스케일링 법칙 - 크면 클수록 좋아!</h3>
+
+    <div class="analogy">
+        <div class="label blue">쉬운 비유</div>
+        <strong>스케일링 = 공부를 더 하면 성적이 오르는 것!</strong><br><br>
+        17M(1700만) → 70M(7000만) → 200M(2억) 파라미터로 키울수록 성능이 꾸준히 올라갔어요.<br>
+        LLM(ChatGPT 등)에서도 나타나는 현상이 시계열 모델에서도 확인된 거예요!
+    </div>
+
+    <!-- ===== Chapter 6: 정리 ===== -->
+    <div class="chapter" id="ch6">
+        <div class="chapter-num">Chapter 6</div>
+        <h2>한눈에 정리!</h2>
+    </div>
+
+    <h3>TimesFM vs ChatGPT 비교</h3>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>ChatGPT (LLM)</th>
+                    <th>TimesFM</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>입력</strong></td>
+                    <td>글자 (토큰)</td>
+                    <td>숫자 묶음 (패치)</td>
+                </tr>
+                <tr>
+                    <td><strong>토큰화 방법</strong></td>
+                    <td>BPE (글자 쪼개기)</td>
+                    <td>고정 크기 패칭 (32개씩)</td>
+                </tr>
+                <tr>
+                    <td><strong>입력 처리</strong></td>
+                    <td>임베딩 테이블 조회</td>
+                    <td>Residual Block (MLP)</td>
+                </tr>
+                <tr>
+                    <td><strong>출력</strong></td>
+                    <td>다음 글자 확률</td>
+                    <td>다음 128개 시점 값</td>
+                </tr>
+                <tr>
+                    <td><strong>모델 크기</strong></td>
+                    <td>수십억~수천억</td>
+                    <td>2억 (200M)</td>
+                </tr>
+                <tr>
+                    <td><strong>학습 데이터</strong></td>
+                    <td>인터넷 텍스트</td>
+                    <td>시계열 1000억 시점</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>TimesFM이 잘하는 4가지</h3>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">🎯</div>
+            <div class="unit"><strong>제로샷</strong><br>추가 학습 없이 바로 예측</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">⚡</div>
+            <div class="unit"><strong>효율적</strong><br>GPT보다 875배 작음</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">📏</div>
+            <div class="unit"><strong>유연함</strong><br>어떤 길이든 처리 가능</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">🏆</div>
+            <div class="unit"><strong>정확함</strong><br>전문 모델과 동등 이상</div>
+        </div>
+    </div>
+
+    <h3>핵심 아키텍처 요약</h3>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>구성 요소</th>
+                    <th>값</th>
+                    <th>쉬운 설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Transformer 층 수</td>
+                    <td><strong>20층</strong></td>
+                    <td>20겹으로 쌓인 생각 레이어</td>
+                </tr>
+                <tr>
+                    <td>어텐션 헤드</td>
+                    <td><strong>16개</strong></td>
+                    <td>16명의 전문 탐정</td>
+                </tr>
+                <tr>
+                    <td>모델 차원</td>
+                    <td><strong>1280</strong></td>
+                    <td>AI가 쓰는 언어의 단어 수</td>
+                </tr>
+                <tr>
+                    <td>입력 패치 크기</td>
+                    <td><strong>32</strong></td>
+                    <td>한번에 읽는 숫자 개수</td>
+                </tr>
+                <tr>
+                    <td>출력 패치 크기</td>
+                    <td><strong>128</strong></td>
+                    <td>한번에 예측하는 숫자 개수</td>
+                </tr>
+                <tr>
+                    <td>총 파라미터</td>
+                    <td><strong>200M</strong></td>
+                    <td>2억 개의 조절 가능한 값</td>
+                </tr>
+                <tr>
+                    <td>손실 함수</td>
+                    <td><strong>MSE</strong></td>
+                    <td>예측과 정답의 차이 제곱 평균</td>
+                </tr>
+                <tr>
+                    <td>학습 데이터</td>
+                    <td><strong>~100B 시점</strong></td>
+                    <td>1000억 개의 숫자 데이터</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>TimesFM의 진화: 버전 타임라인</h3>
+
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="version">v1.0 (2024)</div>
+            <div class="detail">200M 파라미터 | 최대 컨텍스트 512 | ICML 2024 발표</div>
+            <div class="detail">첫 오픈소스 릴리즈. 제로샷으로 supervised 모델과 대등한 성능 입증</div>
+        </div>
+        <div class="timeline-item">
+            <div class="version">v2.0 (2025 초)</div>
+            <div class="detail">500M 파라미터 | 최대 컨텍스트 2,048 | 주파수 인디케이터 도입</div>
+            <div class="detail">모델 크기 2.5배 확대. "이 데이터는 시간별/일별/주별" 힌트를 줄 수 있게 됨</div>
+        </div>
+        <div class="timeline-item current">
+            <div class="version">v2.5 (2025.09) — 현재</div>
+            <div class="detail">200M 파라미터 | 최대 컨텍스트 16,384 | 양자일 예측 추가</div>
+            <div class="detail">오히려 파라미터를 줄이고 컨텍스트를 32배 확대! 주파수 인디케이터 제거 (자동 감지). 30M 양자일 헤드로 "범위 예측" 가능</div>
+        </div>
+    </div>
+
+    <div class="analogy green">
+        <div class="label green">재밌는 포인트</div>
+        <strong>v2.0 → v2.5에서 파라미터가 500M → 200M으로 줄었어요!</strong><br>
+        "크면 좋다"는 게 항상 맞는 건 아녜요. 더 똑똑한 구조와 학습 방법을 쓰면, 작은 모델로도 더 잘할 수 있어요. 마치 무거운 백과사전 대신 잘 정리된 요약노트가 더 유용한 것처럼!
+    </div>
+
+    <h3>실생활에서 어디에 쓸 수 있을까?</h3>
+
+    <div class="scenario-grid">
+        <div class="scenario-card">
+            <div class="icon">🏪</div>
+            <h4>편의점 재고 관리</h4>
+            <p>"다음 주에 아이스크림이 몇 개 팔릴까?" — 과거 판매 데이터만 넣으면 TimesFM이 예측해줘요. 추가 학습 없이!</p>
+        </div>
+        <div class="scenario-card">
+            <div class="icon">⚡</div>
+            <h4>전력 수요 예측</h4>
+            <p>내일 오후 2시에 전기가 얼마나 필요할지 예측해서, 발전소가 미리 준비할 수 있어요.</p>
+        </div>
+        <div class="scenario-card">
+            <div class="icon">🏥</div>
+            <h4>병원 환자 수 예측</h4>
+            <p>다음 주 응급실에 몇 명이 올지 예측해서, 의사와 간호사 배치를 미리 계획해요.</p>
+        </div>
+        <div class="scenario-card">
+            <div class="icon">🚦</div>
+            <h4>교통 흐름 예측</h4>
+            <p>출퇴근 시간대 교통량을 예측해서, 신호등 타이밍을 최적화할 수 있어요.</p>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <h4>한 줄 요약</h4>
+        <p style="font-size: 20px; margin:0;">TimesFM = <strong>"시계열판 ChatGPT"</strong></p>
+        <p style="margin:0;">과거 숫자 패턴을 보고 미래를 예측하는 만능 AI.<br>작지만(200M) 강력하고, 한 번 학습으로 어떤 시계열이든 OK!</p>
+    </div>
+
+    <!-- ===== 용어 사전 ===== -->
+    <div class="chapter" id="glossary">
+        <div class="chapter-num">Glossary</div>
+        <h2>용어 사전</h2>
+    </div>
+
+    <div class="glossary">
+        <div class="glossary-item">
+            <div class="term">시계열 (Time Series)</div>
+            <div class="def">시간 순서대로 기록된 숫자 데이터. 매일 기온, 매시간 교통량 등.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">패칭 (Patching)</div>
+            <div class="def">시계열 숫자를 일정 크기(32개)로 묶는 것. 단어를 만드는 것과 비슷.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Transformer</div>
+            <div class="def">ChatGPT에도 쓰이는 AI 구조. 입력들 사이의 관계를 파악하는 데 뛰어남.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Decoder-Only</div>
+            <div class="def">Transformer의 한 종류. 앞의 내용만 보고 다음을 예측하는 구조. GPT와 같은 방식.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Self-Attention</div>
+            <div class="def">각 패치가 다른 패치들과 "대화"하면서 중요한 패턴을 찾는 메커니즘.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Causal (인과적)</div>
+            <div class="def">미래 정보를 참고하지 않는 규칙. 현재와 과거만 보고 예측해야 해요.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Residual Block</div>
+            <div class="def">원래 값을 보존하면서 변환하는 구조. 정보 손실을 막는 안전장치.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">위치 인코딩 (Positional Encoding)</div>
+            <div class="def">각 패치에 순서 정보를 더해주는 것. "1번째, 2번째..."를 알려줘요.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">제로샷 (Zero-Shot)</div>
+            <div class="def">추가 학습 없이 바로 예측하는 능력. 처음 보는 문제도 풀 수 있어요.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">파라미터 (Parameters)</div>
+            <div class="def">AI의 "뇌세포" 같은 것. 학습하면서 조절되는 숫자들. 많을수록 복잡한 패턴을 배울 수 있어요.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">MSE (Mean Squared Error)</div>
+            <div class="def">예측값과 실제값의 차이를 제곱해서 평균 낸 것. 작을수록 잘 맞춘 거예요.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">오토리그레시브 (Autoregressive)</div>
+            <div class="def">자기가 예측한 결과를 다시 입력으로 사용하는 방식. 이어달리기처럼 계속 이어감.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">양자일 (Quantile)</div>
+            <div class="def">"정확한 값은 모르지만 이 범위 안에 있을 거야"라고 범위로 예측하는 것.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">컨텍스트 길이 (Context Length)</div>
+            <div class="def">AI가 한 번에 볼 수 있는 과거 데이터의 최대 길이. v2.5에서는 16,384까지!</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">호라이즌 (Horizon)</div>
+            <div class="def">얼마나 먼 미래까지 예측할지. "호라이즌 12" = 12 시점 뒤까지 예측.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">파운데이션 모델 (Foundation Model)</div>
+            <div class="def">대규모 데이터로 사전학습하여 다양한 작업에 범용적으로 사용 가능한 AI 모델.</div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Google Research &middot; ICML 2024 &middot; <a href="https://arxiv.org/abs/2310.10688" target="_blank">arXiv:2310.10688</a> &middot; <a href="https://github.com/google-research/timesfm" target="_blank">GitHub</a>
+</footer>
+
+<script>
+// Nav scroll highlight
+const sections = document.querySelectorAll('.chapter');
+const navLinks = document.querySelectorAll('nav a');
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            navLinks.forEach(a => a.classList.remove('active'));
+            const id = entry.target.id;
+            const link = document.querySelector(`nav a[href="#${id}"]`);
+            if (link) link.classList.add('active');
+        }
+    });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
