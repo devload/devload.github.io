@@ -663,6 +663,7 @@
         <a href="#ch4">학습 방법</a>
         <a href="#ch5">성능</a>
         <a href="#ch6">정리</a>
+        <a href="#ch7">사용법</a>
         <a href="#glossary">용어사전</a>
     </div>
 </nav>
@@ -1488,6 +1489,192 @@
         <h4>한 줄 요약</h4>
         <p style="font-size: 20px; margin:0;">TimesFM = <strong>"시계열판 ChatGPT"</strong></p>
         <p style="margin:0;">과거 숫자 패턴을 보고 미래를 예측하는 만능 AI.<br>작지만(200M) 강력하고, 한 번 학습으로 어떤 시계열이든 OK!</p>
+    </div>
+
+    <!-- ===== Chapter 7: 사용법 ===== -->
+    <div class="chapter" id="ch7">
+        <div class="chapter-num">Chapter 7</div>
+        <h2>직접 써보기!</h2>
+    </div>
+
+    <p>TimesFM은 Python 코드 몇 줄이면 바로 사용할 수 있어요.</p>
+
+    <h3>Step 1: 설치</h3>
+
+    <div class="code-block">
+        <span class="comment"># 저장소 클론 & 설치</span><br>
+        <span class="keyword">git</span> clone https://github.com/google-research/timesfm.git<br>
+        <span class="keyword">cd</span> timesfm<br>
+        <span class="keyword">pip</span> install -e .[torch]
+    </div>
+
+    <div class="analogy green">
+        <div class="label green">참고</div>
+        Apple Silicon(M1/M2/M3) Mac이면 <code>[torch]</code>, GPU 서버면 <code>[torch]</code> 또는 <code>[flax]</code>(JAX)를 선택하면 돼요.
+    </div>
+
+    <h3>Step 2: 모델 로드 & 예측</h3>
+
+    <div class="code-block">
+        <span class="keyword">import</span> torch<br>
+        <span class="keyword">import</span> numpy <span class="keyword">as</span> np<br>
+        <span class="keyword">import</span> timesfm<br>
+        <br>
+        <span class="comment"># GPU 성능 최적화</span><br>
+        torch.set_float32_matmul_precision(<span class="string">"high"</span>)<br>
+        <br>
+        <span class="comment"># 1. 모델 로드 (처음에 자동 다운로드)</span><br>
+        model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"google/timesfm-2.5-200m-pytorch"</span><br>
+        )<br>
+        <br>
+        <span class="comment"># 2. 설정</span><br>
+        model.compile(timesfm.ForecastConfig(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;max_context=<span class="number">1024</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 최대 과거 데이터 길이</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;max_horizon=<span class="number">256</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 최대 예측 길이</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;normalize_inputs=<span class="number">True</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 입력 정규화</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;use_continuous_quantile_head=<span class="number">True</span>,<span class="comment"># 범위 예측 켜기</span><br>
+        ))<br>
+        <br>
+        <span class="comment"># 3. 예측! (이게 끝이에요!)</span><br>
+        point, quantile = model.forecast(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;horizon=<span class="number">12</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;inputs=[<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;np.linspace(<span class="number">0</span>, <span class="number">1</span>, <span class="number">100</span>),&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 직선 데이터 100개</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;np.sin(np.linspace(<span class="number">0</span>, <span class="number">20</span>, <span class="number">67</span>)),<span class="comment"># 파도 데이터 67개</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;],<br>
+        )
+    </div>
+
+    <h3>Step 3: 결과 확인</h3>
+
+    <div class="code-block">
+        <span class="keyword">print</span>(point.shape)&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># (2, 12) — 2개 시리즈 × 미래 12시점</span><br>
+        <span class="keyword">print</span>(quantile.shape)&nbsp;&nbsp;<span class="comment"># (2, 12, 10) — + 10개 분위수</span><br>
+        <br>
+        <span class="comment"># point[0] = 직선 데이터의 미래 12개 값</span><br>
+        <span class="comment"># point[1] = 파도 데이터의 미래 12개 값</span><br>
+        <span class="comment"># quantile[0] = 직선 데이터의 "이 범위 안에 있을 거야" 예측</span>
+    </div>
+
+    <div class="analogy">
+        <div class="label blue">출력 해석</div>
+        <strong>point</strong> = "미래 값은 이거야!" (정확한 숫자 1개)<br>
+        <strong>quantile</strong> = "미래 값은 이 범위 안에 있을 거야!" (10th~90th 퍼센타일)<br><br>
+        날씨 예보로 비유하면:<br>
+        point = "내일 기온은 <strong>25도</strong>입니다"<br>
+        quantile = "내일 기온은 <strong>22~28도</strong> 사이일 겁니다"
+    </div>
+
+    <h3>설정 옵션 한눈에</h3>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>옵션</th>
+                    <th>기본값</th>
+                    <th>쉬운 설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>max_context</code></td>
+                    <td>1024</td>
+                    <td>과거 데이터 최대 몇 개까지 볼지</td>
+                </tr>
+                <tr>
+                    <td><code>max_horizon</code></td>
+                    <td>256</td>
+                    <td>미래를 최대 몇 개까지 예측할지</td>
+                </tr>
+                <tr>
+                    <td><code>normalize_inputs</code></td>
+                    <td>True</td>
+                    <td>입력 숫자 크기를 맞춰주기 (권장)</td>
+                </tr>
+                <tr>
+                    <td><code>use_continuous_quantile_head</code></td>
+                    <td>True</td>
+                    <td>범위 예측 (켜면 quantile 출력 생김)</td>
+                </tr>
+                <tr>
+                    <td><code>force_flip_invariance</code></td>
+                    <td>True</td>
+                    <td>스케일 불변성 (큰 숫자든 작은 숫자든 잘 처리)</td>
+                </tr>
+                <tr>
+                    <td><code>infer_is_positive</code></td>
+                    <td>True</td>
+                    <td>양수 데이터면 음수 예측 방지</td>
+                </tr>
+                <tr>
+                    <td><code>fix_quantile_crossing</code></td>
+                    <td>True</td>
+                    <td>분위수 순서 꼬임 방지</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>실전 예시: 커피숍 매출 예측</h3>
+
+    <p>우리 동네 커피숍의 최근 30일 일매출(만원)이 있다고 해볼게요. 이걸로 다음 7일을 예측해봅시다!</p>
+
+    <div class="code-block">
+        <span class="keyword">import</span> numpy <span class="keyword">as</span> np<br>
+        <span class="keyword">import</span> timesfm<br>
+        <br>
+        <span class="comment"># 커피숍 30일 일매출 (만원)</span><br>
+        sales = [<br>
+        &nbsp;&nbsp;<span class="number">45, 42, 50, 55, 60, 58, 40</span>,  <span class="comment"># 1주차 (월~일)</span><br>
+        &nbsp;&nbsp;<span class="number">47, 44, 52, 57, 63, 61, 42</span>,  <span class="comment"># 2주차</span><br>
+        &nbsp;&nbsp;<span class="number">48, 45, 53, 58, 65, 62, 43</span>,  <span class="comment"># 3주차</span><br>
+        &nbsp;&nbsp;<span class="number">50, 47, 55, 60, 67, 64, 44</span>,  <span class="comment"># 4주차</span><br>
+        &nbsp;&nbsp;<span class="number">51, 48</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 5주차 월~화</span><br>
+        ]<br>
+        <br>
+        <span class="comment"># 모델 로드 & 설정</span><br>
+        model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"google/timesfm-2.5-200m-pytorch"</span><br>
+        )<br>
+        model.compile(timesfm.ForecastConfig(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;max_context=<span class="number">512</span>, max_horizon=<span class="number">128</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;normalize_inputs=<span class="number">True</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;use_continuous_quantile_head=<span class="number">True</span>,<br>
+        ))<br>
+        <br>
+        <span class="comment"># 다음 7일 예측!</span><br>
+        point, quantile = model.forecast(horizon=<span class="number">7</span>, inputs=[sales])<br>
+        <br>
+        <span class="keyword">print</span>(<span class="string">"다음 7일 예측 매출:"</span>)<br>
+        <span class="keyword">for</span> i, v <span class="keyword">in</span> enumerate(point[<span class="number">0</span>]):<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;day = [<span class="string">"수"</span>,<span class="string">"목"</span>,<span class="string">"금"</span>,<span class="string">"토"</span>,<span class="string">"일"</span>,<span class="string">"월"</span>,<span class="string">"화"</span>][i]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">print</span>(f<span class="string">"  {day}요일: {v:.0f}만원"</span>)
+    </div>
+
+    <div class="walkthrough">
+        <h4>예상 출력 결과</h4>
+        <div class="numbers" style="background: var(--green-light); line-height: 2;">
+과거 30일: 45 42 50 55 60 58 40 | 47 44 52 57 63 61 42 | ... | 51 48<br>
+──────────────────────────────────────────────────────────────────────<br>
+예측 7일:&nbsp; 수:56  목:61  금:68  토:65  일:45  월:52  화:49
+        </div>
+        <p style="font-size: 14px; color: var(--gray); margin-top: 8px; margin-bottom: 0;">
+            TimesFM이 <strong>주간 패턴</strong>(금토에 매출 높고 일요일에 떨어지는)과 <strong>상승 트렌드</strong>(매주 조금씩 오르는)를 동시에 잡아낸 거예요!
+        </p>
+    </div>
+
+    <div class="analogy orange">
+        <div class="label orange">놀라운 점</div>
+        이 커피숍 데이터를 <strong>한 번도 학습한 적 없어요!</strong> 다른 수천만 개의 시계열 패턴을 배우면서 "주간 반복 + 상승 추세"라는 보편적 패턴을 이해했기 때문에, 처음 보는 커피숍 데이터도 바로 예측할 수 있는 거예요.
+    </div>
+
+    <div class="highlight-box">
+        <h4>정리: 3줄이면 끝!</h4>
+        <p style="font-family: 'SF Mono', monospace; font-size: 14px; margin-bottom: 4px;">1. model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(...)</p>
+        <p style="font-family: 'SF Mono', monospace; font-size: 14px; margin-bottom: 4px;">2. model.compile(timesfm.ForecastConfig(...))</p>
+        <p style="font-family: 'SF Mono', monospace; font-size: 14px; margin-bottom: 0;">3. point, quantile = model.forecast(horizon=7, inputs=[data])</p>
     </div>
 
     <!-- ===== 용어 사전 ===== -->
