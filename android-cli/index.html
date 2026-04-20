@@ -478,6 +478,120 @@
     }
     .arch-node .badge { left: 10px; width: 32px; height: 32px; font-size: 12px; }
   }
+
+  /* ============ Experiment sections ============ */
+  .exp-banner {
+    background: linear-gradient(135deg, #fff7e6 0%, #fef3f2 100%);
+    border: 1px solid #f0c896;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin: 28px 0;
+  }
+  .exp-banner .lab {
+    display: inline-block;
+    background: #b06000;
+    color: #fff;
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .exp-banner p { margin-bottom: 0; color: #5a3a00; }
+
+  .metrics {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 22px;
+    font-size: 0.92em;
+  }
+  .metrics th, .metrics td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .metrics th:first-child, .metrics td:first-child {
+    text-align: left;
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+  .metrics thead th {
+    background: var(--surface);
+    font-size: 0.82em;
+    letter-spacing: 0.03em;
+    color: var(--text-strong);
+  }
+  .metrics .raw-col { color: #b84827; }
+  .metrics .ann-col { color: var(--accent); font-weight: 700; }
+  .metrics .bad { color: #c0392b; font-weight: 700; }
+
+  .agent-trace {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 18px 0 24px;
+  }
+  .turn {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px 14px 68px;
+    position: relative;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .turn .tnum {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 800;
+    font-size: 0.78em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.04em;
+  }
+  .turn .what {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.86em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .turn .why {
+    font-size: 0.92em;
+    color: var(--text);
+    margin: 0;
+  }
+  .turn .detail {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.78em;
+    color: var(--code-text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .turn.final { border-color: #a6d8b3; background: #f6fdf8; }
+  .turn.final .tnum { background: var(--link); }
+  .trace-arrow {
+    width: 2px;
+    height: 14px;
+    background: var(--border-strong);
+    margin: 0 auto;
+    align-self: center;
+  }
 </style>
 </head>
 <body>
@@ -497,6 +611,8 @@
 공식 문서: <a href="https://developer.android.com/tools/agents/android-cli?hl=ko" target="_blank">developer.android.com/tools/agents/android-cli</a></p>
 
 <p>이 글에서는 <strong>실제 연결된 Android 기기로 데모 앱을 띄워서</strong> Android CLI의 핵심 기능 4가지를 시연해봅니다. 단순히 명령어 나열이 아니라, 진짜로 찍은 스크린샷 + 실제 좌표값으로 보여드릴게요. 그리고 중간에 많은 분이 헷갈려 하는 <strong>"CLI가 자연어를 이해한다면 LLM이 내장된 거냐"</strong>라는 질문에 대한 답도 별도 섹션으로 다룹니다.</p>
+
+<p>마지막엔 <strong>GPT-4o API를 실제로 호출해서 두 개의 실험</strong>까지 돌렸어요 — (A) raw 스크린샷 vs annotate 좌표 정확도 비교, (B) GPT-4o가 Android CLI를 자율로 운전하는 4턴짜리 에이전트 루프. 주장만 하지 않고 수치와 로그로 증명합니다.</p>
 
 <div class="callout">
   <strong>시연 환경 고지:</strong> 글을 쓰는 시점(2026-04-17)에는 <code>android</code> 바이너리를 macOS에 바로 설치할 수 있는 공식 경로가 아직 정리 중이라, 아래 시연은 <code>adb</code> + <code>uiautomator</code> + <code>ImageMagick</code> 조합으로 Android CLI의 동작을 <strong>동일한 결과물</strong>로 재현했습니다. 핵심은 이걸 명령어 한 줄로 해주는 게 Android CLI의 가치라는 점이에요.
@@ -885,6 +1001,159 @@ android skills find 'performance'</code></pre>
 </table>
 
 <p>이게 없으면 LLM은 "보편적인 모바일 개발자"의 감으로 코드를 씁니다. 2020년 자바 코드가 섞이기도 하고, 이미 deprecated된 API를 추천하기도 해요. 스킬이 있으면 <strong>Android 팀이 2026년에 권장하는 방식</strong>을 따릅니다. 사소해 보이지만 누적되면 프로젝트 품질에 엄청난 차이를 만들어요.</p>
+
+<hr>
+
+<h2>🧪 실전 증명 — GPT-4o로 직접 돌려봤습니다</h2>
+
+<div class="exp-banner">
+  <span class="lab">Live experiment · 2026-04-20</span>
+  <p>지금까지의 주장들을 <strong>실제 GPT-4o API + 연결된 V2041 기기</strong>로 검증했어요. 이 섹션의 모든 수치와 로그는 현장에서 방금 돌린 겁니다. 재현 스크립트도 공개해요.</p>
+</div>
+
+<h3>실험 A · raw 스크린샷 vs annotate + CLI 좌표 정확도</h3>
+
+<p>앞에서 <strong>"annotate 없이 생 스크린샷 주면 좌표가 부정확하다"</strong>라고 주장했잖아요? 그걸 수치로 증명할 차례입니다. 동일한 데모 앱 홈 화면을 놓고 GPT-4o에게 두 가지로 물었습니다.</p>
+
+<ul>
+  <li><strong>Raw 모드</strong>: 생 PNG 한 장 + "이 앱의 FAB 중심 픽셀 좌표를 알려줘. 'x,y'로만 답해" — 모델이 픽셀을 직접 찍어야 함</li>
+  <li><strong>Annotated 모드</strong>: annotate된 PNG + "FAB는 몇 번 라벨이야? '#N'으로만 답해" — 모델은 번호만 읽으면 되고, CLI가 사이드카에서 정확한 좌표로 변환</li>
+</ul>
+
+<p>3개 요소(햄버거 / 더보기 / FAB) × 각 3회 반복 = 18번의 실제 API 호출. 결과입니다.</p>
+
+<figure class="figure">
+  <img src="images/exp2_chart.png" alt="Raw vs annotated pixel error bar chart">
+  <figcaption>GPT-4o-2024-11-20 · 오차 단위 px · annotate + CLI는 모든 케이스에서 오차 0</figcaption>
+</figure>
+
+<table class="metrics">
+  <thead>
+    <tr>
+      <th>요소</th>
+      <th class="raw-col">Raw 평균 오차</th>
+      <th class="raw-col">Raw 최대 오차</th>
+      <th class="raw-col">Raw 박스 적중률</th>
+      <th class="ann-col">Annotate + CLI</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>햄버거 메뉴 (#1)</td>
+      <td class="raw-col">30.5 px</td>
+      <td class="raw-col">32.2 px</td>
+      <td class="raw-col">100%</td>
+      <td class="ann-col">0 px · 3/3 정답</td>
+    </tr>
+    <tr>
+      <td>더보기 (#2)</td>
+      <td class="raw-col">37.8 px</td>
+      <td class="raw-col">42.9 px</td>
+      <td class="raw-col">100%</td>
+      <td class="ann-col">0 px · 3/3 정답</td>
+    </tr>
+    <tr>
+      <td>FAB (#3)</td>
+      <td class="raw-col">28.3 px</td>
+      <td class="raw-col bad">58.7 px ⚠</td>
+      <td class="raw-col bad">67% ⚠</td>
+      <td class="ann-col">0 px · 3/3 정답</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>FAB 케이스가 결정적이에요. GPT-4o는 3번 중 <strong>1번을 (1034, 2260)으로 찍었고, 이건 실제 FAB 바운드 <code>[936,2180][1048,2258]</code> 바깥</strong>이에요. 생 스크린샷 기반으로 <code>input tap</code>을 쐈다면 <strong>FAB가 아니라 배경을 탭했다는 뜻</strong>이죠. annotate 쪽은? 9/9 정답. 게다가 오차는 항상 정확히 0 px — CLI의 사이드카 lookup이 있기 때문.</p>
+
+<blockquote>
+  <p>"annotate는 이미지를 예쁘게 꾸며주는 게 아니라, <strong>멀티모달 모델의 픽셀-좌표 약점을 구조적으로 제거하는 레이어</strong>예요."</p>
+</blockquote>
+
+<h3>실험 B · GPT-4o가 CLI를 자율적으로 운전 (4 tool calls)</h3>
+
+<p>더 재미있는 걸 해봤어요. GPT-4o에게 CLI를 <strong>tool로 노출</strong>하고 자연어 목표 한 줄만 던진 뒤, 자율 루프를 돌렸습니다. 개입 없음. 픽셀 좌표 노출도 없음.</p>
+
+<pre class="bash"><code># 노출한 도구 4개
+tools = [
+  screen_capture_annotate(),     # 현재 화면 + #N 라벨 리스트
+  tap_label(n: int),             # #N 중심을 adb tap
+  layout_diff(),                 # 직전 상태 대비 추가/삭제 노드
+  report(summary: str)           # 최종 보고 (세션 종료)
+]
+
+# 사용자 목표 (단 한 번)
+user = "이 앱의 메뉴 구조를 조사해서 3줄로 한국어 보고해줘."</code></pre>
+
+<p>GPT-4o가 이 목표를 4턴 만에 완결했습니다. 전체 트레이스:</p>
+
+<div class="agent-trace">
+
+  <div class="turn">
+    <div class="tnum">T·1</div>
+    <div class="what">screen_capture_annotate()</div>
+    <p class="why">에이전트의 첫 반응: "일단 화면이 뭔지 봐야겠다." 라벨 3개(#1 탐색 창 열기, #2 추가 옵션, #3 fab) 획득.</p>
+    <div class="detail">→ labels: [
+  { n: 1, desc: "탐색 창 열기",  bounds: [0,66,112,178]     },
+  { n: 2, desc: "추가 옵션",     bounds: [1000,74,1080,170] },
+  { n: 3, id:  "fab",            bounds: [936,2180,1048,2258]}
+]</div>
+  </div>
+
+  <div class="trace-arrow"></div>
+
+  <div class="turn">
+    <div class="tnum">T·2</div>
+    <div class="what">tap_label(n=1)</div>
+    <p class="why">"메뉴 구조 알려면 햄버거부터 눌러야지." 픽셀 좌표 언급 없음. 그냥 #1.</p>
+    <div class="detail">→ { ok: true, tapped: "#1", center: [56, 122], desc: "탐색 창 열기" }</div>
+  </div>
+
+  <div class="trace-arrow"></div>
+
+  <div class="turn">
+    <div class="tnum">T·3</div>
+    <div class="what">layout_diff()</div>
+    <p class="why">"탭했으니 뭐가 바뀌었는지 보자." 전체 레이아웃을 다시 덤프하지 않고 <em>변화분만</em> 조회.</p>
+    <div class="detail">→ added: [
+  { text: "Slideshow",          id: "design_menu_item_text" },
+  { id:   "nav_gallery",        class: "LinearLayoutCompat" },
+  { id:   "design_navigation_view", class: "RecyclerView" },
+  { desc: "Navigation header",  id: "imageView" },
+  { text: "Gallery",            id: "design_menu_item_text" },
+  { text: "Home",               id: "design_menu_item_text" },
+  ...
+]</div>
+  </div>
+
+  <div class="trace-arrow"></div>
+
+  <div class="turn final">
+    <div class="tnum">T·4</div>
+    <div class="what">report(summary=...)</div>
+    <p class="why">"정보 충분함. 종료." — 불필요한 추가 탐색 없이 바로 결론.</p>
+    <div class="detail">→ "앱 메뉴는 탐색 창, 추가 옵션, 그리고 동작 버튼으로 구성되어 있습니다.
+    탐색 창에는 '홈(Home)', '갤러리(Gallery)', '슬라이드쇼(Slideshow)'
+    항목이 나열되어 있습니다. 각각의 메뉴는 새로운 화면이나 기능으로
+    연결될 가능성이 높습니다."</div>
+  </div>
+
+</div>
+
+<p>에이전트가 실제로 본 첫 번째 화면입니다 (Turn 1의 annotate 결과).</p>
+
+<figure class="figure phone">
+  <img src="images/exp1_agent_view.png" alt="What the agent saw in Turn 1">
+  <figcaption>GPT-4o가 Turn 1에서 받은 이미지 · 초록 박스와 #N 라벨로 CLI가 의사결정을 "찍먹 가능한 메뉴"로 만들어줌</figcaption>
+</figure>
+
+<h4>이 실험에서 주목할 지점들</h4>
+<ul>
+  <li><strong>픽셀 좌표가 단 한 번도 모델 입출력에 등장하지 않음.</strong> 모델은 <code>#1</code>만 뱉었고, CLI가 알아서 <code>(56, 122)</code>로 변환해 <code>adb shell input tap</code>까지 실행.</li>
+  <li><strong>4턴으로 종료.</strong> 실험 A의 교훈(모델이 픽셀 찍으면 틀림)을 CLI가 구조적으로 우회해주니, 에이전트는 "뭘 할지"만 생각하면 되고 턴 수가 확 줄어듦.</li>
+  <li><strong>layout_diff가 탐색 깊이를 결정</strong>. 전체 XML(~수만 자)이 아니라 추가된 6개 노드만 읽고 판단 → 토큰·시간 절약.</li>
+  <li><strong>multi-agent 없음</strong>. GPT-4o 한 개 인스턴스 + CLI 도구 4개. 흔히 필요하다 여겨지는 "UI parser 에이전트" 같은 것도 불필요 — CLI 자체가 그 역할을 해주니까.</li>
+</ul>
+
+<p>재현 스크립트는 <code>experiments/exp1_agent_loop.py</code>, <code>experiments/exp2_raw_vs_annotated.py</code>로 저장해뒀어요. <code>OPENAI_API_KEY</code>만 세팅하면 그대로 돌아갑니다 (단, 실험 B는 연결된 Android 기기 필요).</p>
 
 <hr>
 
