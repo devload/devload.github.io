@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android 17이 앱에 "메모리 상한"을 씌운다 · App Memory Limit 완전 정리</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f8fa;
+    --surface-2: #f1f3f4;
+    --text: #1f2328;
+    --text-strong: #0a0e14;
+    --muted: #5f6368;
+    --accent: #2e7d40;
+    --accent-soft: #e8f5ec;
+    --link: #1a73e8;
+    --link-soft: #e8f0fe;
+    --warn: #b06000;
+    --warn-soft: #fef7e6;
+    --danger: #c0392b;
+    --danger-soft: #fdecea;
+    --border: #e1e4e8;
+    --border-strong: #c8ccd2;
+    --code-bg: #f6f8fa;
+    --code-text: #24292f;
+    --code-inline: #b12a5c;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.78;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+  header.hero {
+    padding: 40px 32px;
+    background: linear-gradient(135deg, #f1faf3 0%, #eef4ff 100%);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    margin-bottom: 40px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 2.05rem;
+    line-height: 1.3;
+    margin: 0 0 12px;
+    letter-spacing: -0.025em;
+    color: var(--text-strong);
+    font-weight: 800;
+  }
+  h2 {
+    font-size: 1.55rem;
+    margin: 64px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.02em;
+    color: var(--text-strong);
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 1.1rem;
+    margin: 32px 0 10px;
+    color: var(--text-strong);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  h4 {
+    font-size: 0.98rem;
+    margin: 24px 0 6px;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  p { margin: 0 0 14px; }
+  blockquote {
+    margin: 22px 0;
+    padding: 14px 22px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 10px 10px 0;
+    color: var(--text);
+    font-style: normal;
+  }
+  blockquote p:last-child { margin-bottom: 0; }
+  code {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.86em;
+    color: var(--code-inline);
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 14px 0 22px;
+    position: relative;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--code-text);
+    font-size: 0.86em;
+    line-height: 1.65;
+    border: none;
+  }
+  pre.kotlin::before { content: "kotlin"; color: var(--link); }
+  pre.bash::before { content: "shell"; color: var(--accent); }
+  pre.log::before { content: "log"; color: var(--warn); }
+  pre::before {
+    position: absolute;
+    top: 8px;
+    right: 14px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(26,115,232,0.3);
+    transition: border-color 0.15s;
+  }
+  a:hover { border-color: var(--link); }
+  ul, ol { padding-left: 22px; margin: 10px 0 18px; }
+  li { margin: 5px 0; }
+  strong { color: var(--text-strong); font-weight: 700; }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 56px 0;
+  }
+  .callout {
+    background: var(--link-soft);
+    border: 1px solid rgba(26,115,232,0.25);
+    padding: 14px 20px;
+    border-radius: 10px;
+    margin: 22px 0;
+    font-size: 0.93em;
+  }
+  .callout.warn {
+    background: var(--warn-soft);
+    border-color: #f0c896;
+    color: #5a3a00;
+  }
+  .callout.danger {
+    background: var(--danger-soft);
+    border-color: #f0b0aa;
+    color: #6a1a10;
+  }
+  .callout strong { color: var(--text-strong); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 0.93em;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  thead th {
+    background: var(--surface);
+    color: var(--text-strong);
+    font-weight: 700;
+    font-size: 0.88em;
+    letter-spacing: 0.02em;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  .meta {
+    color: var(--muted);
+    font-size: 0.93em;
+    margin-top: 4px;
+  }
+  .footer-note {
+    color: var(--muted);
+    font-size: 0.85em;
+    text-align: center;
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .kv {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 10px 22px;
+    margin: 18px 0;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .kv dt {
+    color: var(--accent);
+    font-weight: 700;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.88em;
+  }
+  .kv dd { margin: 0; color: var(--text); }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 18px 0 22px;
+  }
+  .two-col > div {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .two-col h4 {
+    margin-top: 0;
+    font-size: 0.82em;
+  }
+  .two-col p:last-child { margin-bottom: 0; }
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    .kv { grid-template-columns: 1fr; gap: 4px 0; }
+    .kv dt { margin-top: 8px; }
+  }
+  .step-list {
+    counter-reset: step;
+    list-style: none;
+    padding-left: 0;
+  }
+  .step-list li {
+    counter-increment: step;
+    position: relative;
+    padding: 4px 0 4px 44px;
+    margin: 10px 0;
+    min-height: 32px;
+  }
+  .step-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 30px;
+    height: 30px;
+    background: var(--accent);
+    color: #fff;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: 0.85em;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* TL;DR card */
+  .tldr {
+    background: linear-gradient(135deg, #f6fdf8 0%, #eef4ff 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 28px 0 32px;
+  }
+  .tldr h4 {
+    margin: 0 0 10px;
+    color: var(--accent);
+  }
+  .tldr ul { margin: 0; padding-left: 20px; }
+  .tldr li { margin: 4px 0; }
+
+  /* Compare diagram: LMK vs App Memory Limit */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0 30px;
+  }
+  .compare > div {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 22px 18px;
+    background: #fff;
+    position: relative;
+  }
+  .compare .before { background: #fff8f7; border-color: #f0b0aa; }
+  .compare .after  { background: #f6fdf8; border-color: #a6d8b3; }
+  .compare .label {
+    position: absolute;
+    top: -11px;
+    left: 18px;
+    font-size: 0.68em;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .compare .before .label { background: var(--danger); color: #fff; }
+  .compare .after  .label { background: var(--accent); color: #fff; }
+  .compare h3 { margin-top: 6px; }
+  .compare ul { padding-left: 18px; margin: 8px 0 0; }
+  @media (max-width: 600px) { .compare { grid-template-columns: 1fr; } }
+
+  /* Scenario flow boxes */
+  .flow {
+    margin: 22px 0 28px;
+    padding: 24px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .flow-title {
+    font-size: 0.75em;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .flow-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: stretch;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .flow-node {
+    position: relative;
+    background: #fff;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 14px 20px 14px 64px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .flow-node .badge {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 800;
+    font-size: 13px;
+    color: #fff;
+    background: var(--muted);
+  }
+  .flow-node.app .badge    { background: var(--link); }
+  .flow-node.check .badge  { background: var(--warn); }
+  .flow-node.kill .badge   { background: var(--danger); }
+  .flow-node.log .badge    { background: var(--accent); }
+  .flow-node .name {
+    font-weight: 700;
+    color: var(--text-strong);
+    font-size: 0.98em;
+  }
+  .flow-node .desc {
+    font-size: 0.85em;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+  .flow-arrow {
+    height: 36px;
+    position: relative;
+  }
+  .flow-arrow::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border-strong);
+    transform: translateX(-50%);
+  }
+  .flow-arrow::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--border-strong);
+  }
+
+  /* Checklist */
+  .check-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 10px 0 18px;
+  }
+  .check-list li {
+    position: relative;
+    padding: 6px 0 6px 30px;
+  }
+  .check-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="tag">Android 17 · Memory · Platform</span>
+  <h1>Android 17이 앱에 "메모리 상한"을 씌운다<br>App Memory Limit 완전 정리</h1>
+  <p class="meta">Android 17 Beta 4에서 조용히, 그러나 묵직하게 등장한 변화 하나 — <strong>OS가 앱별로 RAM 사용 상한을 강제</strong>하기 시작한다. 왜 이런 게 나왔고, 어떻게 동작하며, 우리는 뭘 준비해야 하는가.</p>
+</header>
+
+<blockquote>
+  <p>지난 10년간 Android는 "원하는 만큼 써, 대신 운 나쁘면 누가 죽을지 몰라" 였다.<br>
+  Android 17부터는 <strong>"네 몫만큼 써. 넘치면 네가 죽는다."</strong> 로 바뀐다.</p>
+</blockquote>
+
+<div class="tldr">
+  <h4>TL;DR</h4>
+  <ul>
+    <li>Android 17부터 <strong>기기 총 RAM에 기반한 앱별 메모리 상한</strong>이 도입된다.</li>
+    <li>상한 초과 앱은 종료되며, <code>ApplicationExitInfo.getDescription()</code>에 <strong><code>"MemoryLimiter"</code></strong>가 찍힌다.</li>
+    <li>초기에는 <strong>보수적으로 적용</strong> — 심한 누수 앱만 우선 타겟팅.</li>
+    <li>철학은 "LMK의 복불복 종료를 끝내고, <strong>원인 앱에 직접 책임</strong>을 묻는 구조"로 전환.</li>
+    <li>대응: <code>ProfilingManager</code>의 <code>TRIGGER_TYPE_ANOMALY</code> 자동 힙덤프, LeakCanary(Android Studio Panda 통합), <code>ApplicationExitInfo</code> 모니터링.</li>
+  </ul>
+</div>
+
+<h2>1. 배경: 왜 지금 "메모리 상한"인가</h2>
+
+<h3>1-1. LMK(Low Memory Killer)의 오래된 한계</h3>
+<p>Android는 지난 10년 넘게 메모리가 부족하면 <strong>Low Memory Killer</strong>가 뒤에서 앱을 치워왔다. 동작 원리는 간단하다.</p>
+
+<ol class="step-list">
+  <li>시스템이 메모리 압박을 감지한다.</li>
+  <li>각 프로세스의 <code>oom_score_adj</code>(중요도 점수)를 확인한다.</li>
+  <li>점수 높은 프로세스부터 차례로 <code>SIGKILL</code> 을 보낸다.</li>
+</ol>
+
+<p>문제는 이 방식이 <strong>사후 대응</strong>이고, <strong>피해자를 가해자와 무관하게 선정</strong>한다는 점이다.</p>
+
+<table>
+  <thead>
+    <tr><th>상황</th><th>기존 LMK의 행동</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>누수 심한 앱 A가 RAM 1.5 GB 점유</td><td>A는 포그라운드라 살아남음</td></tr>
+    <tr><td>무고한 앱 B가 백그라운드에 있음</td><td><strong>B가 먼저 죽음</strong> (우선순위 낮음)</td></tr>
+    <tr><td>사용자는 B를 다시 열 때 상태 유실</td><td>원인 제공자 A는 멀쩡</td></tr>
+  </tbody>
+</table>
+
+<p>즉 <strong>"메모리를 잘못 쓴 앱이 아닌, 우선순위만 낮은 앱이 벌을 받는"</strong> 구조. 이 비결정성이 수많은 jank와 콜드 스타트, 배터리 소모의 뿌리였다.</p>
+
+<h3>1-2. 앱 생태계가 점점 뚱뚱해지고 있다</h3>
+<p>실제 필드 데이터에서 구글이 관찰한 것은 꽤 노골적이다.</p>
+<ul>
+  <li>일부 앱이 <strong>수백 MB~1 GB+</strong> 를 기본으로 점유</li>
+  <li>메모리 누수가 방치된 채로 스토어에 배포됨</li>
+  <li>한 앱의 누수가 전체 기기의 배터리·발열·반응성을 망가뜨림</li>
+  <li>사용자는 원인을 알 수 없고 "폰이 느려졌다"고만 느낌</li>
+</ul>
+<p>앱은 많아지고 기능은 복잡해지는데, <strong>RAM 효율성에 대한 책임 구조가 없었다.</strong> 요청하면 주는 구조였고, 사고가 나면 LMK가 무작위로 솎아냈다.</p>
+
+<h3>1-3. 폼 팩터 다양화 — 하나의 정책으로는 안 된다</h3>
+<p>Android가 올라타는 기기 폭이 커졌다.</p>
+<div class="two-col">
+  <div>
+    <h4>저가 스마트폰</h4>
+    <p>3~4 GB RAM · 인도·동남아·남미 등 여전히 주력 시장. 메모리 압박이 즉시 UX로 드러남.</p>
+  </div>
+  <div>
+    <h4>플래그십·폴더블</h4>
+    <p>12~16 GB RAM · 멀티윈도우·멀티앱 시나리오가 메모리를 더 태움.</p>
+  </div>
+  <div>
+    <h4>태블릿·차량·XR</h4>
+    <p>폼 팩터별로 허용 예산이 전혀 다름. 단일 정책은 불가능.</p>
+  </div>
+  <div>
+    <h4>Wear OS</h4>
+    <p>극도로 제한된 자원. 한 앱의 누수가 워치 전체를 멈춤.</p>
+  </div>
+</div>
+<p>같은 앱이라도 4 GB 기기와 16 GB 기기에서 허용 가능한 예산은 완전히 다르다. <strong>"총 RAM 기반의 동적 상한"</strong> 이라는 설계가 이제서야 나온 이유다.</p>
+
+<h3>1-4. iOS Jetsam 모델로의 수렴</h3>
+<p>iOS는 수년간 <strong>Jetsam</strong>이라는 유사 개념을 운영해 왔다. 각 앱은 기기 RAM에 따른 예산을 받고, 초과 시 <code>0xDEAD10CC</code> 같은 식별 가능한 코드로 종료된다. 개발자는 Xcode/Organizer에서 원인을 정확히 확인할 수 있다.</p>
+<p>Android도 결국 <strong>"앱별 예산제"</strong> 로 수렴하는 것. App Memory Limit이 그 신호탄이다.</p>
+
+<hr>
+
+<h2>2. 어떻게 동작하는가</h2>
+
+<h3>2-1. 상한은 어떻게 정해지나</h3>
+<dl class="kv">
+  <dt>기준</dt><dd>기기의 <strong>총 RAM</strong>에 기반한 동적 상한</dd>
+  <dt>초기 강도</dt><dd>보수적 (conservative baseline) — 대부분의 정상 앱은 영향 없음</dd>
+  <dt>타겟</dt><dd>극심한 메모리 누수·이상치 앱 우선</dd>
+  <dt>확장성</dt><dd>향후 버전에서 단계적으로 조이는 방향</dd>
+</dl>
+
+<blockquote>
+  <p>공식 표현 — <em>"We're setting conservative baselines initially, targeting excessive memory leaks and other outliers before they trigger system-wide instability..."</em></p>
+</blockquote>
+
+<h3>2-2. 초과 시 전체 흐름</h3>
+
+<div class="flow">
+  <div class="flow-title">APP MEMORY LIMIT — TERMINATION FLOW</div>
+  <div class="flow-nodes">
+    <div class="flow-node app">
+      <div class="badge">APP</div>
+      <div class="name">앱이 RAM을 점유하며 동작</div>
+      <div class="desc">일반 실행 경로 · 할당·해제가 정상적으로 흐름</div>
+    </div>
+    <div class="flow-arrow"></div>
+    <div class="flow-node check">
+      <div class="badge">OS</div>
+      <div class="name">MemoryLimiter가 상한 감시</div>
+      <div class="desc">총 RAM 기반으로 계산된 앱별 상한선 초과 여부를 지속 체크</div>
+    </div>
+    <div class="flow-arrow"></div>
+    <div class="flow-node kill">
+      <div class="badge">KILL</div>
+      <div class="name">상한 초과 시 프로세스 종료</div>
+      <div class="desc">LMK의 우선순위 기반 랜덤 킬이 아니라 <strong>원인 앱을 직접</strong> 종료</div>
+    </div>
+    <div class="flow-arrow"></div>
+    <div class="flow-node log">
+      <div class="badge">LOG</div>
+      <div class="name">ApplicationExitInfo 기록</div>
+      <div class="desc">description에 <code>"MemoryLimiter"</code> 포함 · 개발자가 원인을 결정적으로 식별</div>
+    </div>
+  </div>
+</div>
+
+<h3>2-3. 기존 LMK와의 철학적 차이</h3>
+
+<div class="compare">
+  <div class="before">
+    <span class="label">Before</span>
+    <h3>LMK 중심</h3>
+    <ul>
+      <li>시스템 메모리 부족 <em>이후</em>에 작동</li>
+      <li><code>oom_score_adj</code> 우선순위로 제물 선정</li>
+      <li>무고한 백그라운드 앱이 피해자</li>
+      <li>원인 앱은 멀쩡히 계속 동작</li>
+      <li>개발자는 원인을 역추적하기 어려움</li>
+    </ul>
+  </div>
+  <div class="after">
+    <span class="label">After</span>
+    <h3>App Memory Limit</h3>
+    <ul>
+      <li>앱별 상한 초과 <em>즉시</em> 작동</li>
+      <li>상한을 넘긴 <strong>원인 앱 본인</strong>을 종료</li>
+      <li>무고한 앱은 살아남음</li>
+      <li><code>ApplicationExitInfo</code>에 명확한 라벨</li>
+      <li>개발자는 결정적으로 원인 식별</li>
+    </ul>
+  </div>
+</div>
+
+<hr>
+
+<h2>3. 개발자 체크리스트</h2>
+
+<h3>3-1. <code>ApplicationExitInfo</code>로 종료 사유 집계</h3>
+<p>운영 단계에서 가장 먼저 심어야 하는 코드다. 빌드별로 <strong>"MemoryLimiter로 얼마나 죽는가"</strong>를 대시보드로 보는 것이 시작점.</p>
+
+<pre class="kotlin"><code>val am = getSystemService(ActivityManager::class.java)
+val exits = am.getHistoricalProcessExitReasons(packageName, 0, 20)
+
+for (info in exits) {
+    val killedByMemoryLimit = info.description?.contains("MemoryLimiter") == true
+    if (killedByMemoryLimit) {
+        reportMemoryLimiterExit(
+            timestamp = info.timestamp,
+            pss = info.pss,
+            rss = info.rss,
+            importance = info.importance,
+            processName = info.processName
+        )
+    }
+}</code></pre>
+
+<div class="callout">
+  <strong>팁:</strong> <code>reason</code> 상수(<code>REASON_EXCESSIVE_RESOURCE_USAGE</code> 등)만으로는 LMK 종료와 구분이 안 될 수 있다. <code>description</code>의 <code>"MemoryLimiter"</code> 문자열이 Android 17 상한 정책의 <em>결정적 식별자</em>다.
+</div>
+
+<h3>3-2. <code>ProfilingManager</code>로 이상 시점 힙덤프 자동 수집</h3>
+<p>Android 15부터 도입된 <code>ProfilingManager</code>가 이번 정책과 잘 맞물린다. <code>TRIGGER_TYPE_ANOMALY</code>를 등록하면 시스템이 이상을 감지한 순간 프로파일이 자동으로 수집된다.</p>
+
+<pre class="kotlin"><code>val profilingManager = getSystemService(ProfilingManager::class.java)
+
+val triggers = listOf(
+    ProfilingTrigger.Builder(ProfilingTrigger.TRIGGER_TYPE_ANOMALY).build()
+)
+
+val executor = Executors.newSingleThreadExecutor()
+val callback = Consumer&lt;ProfilingResult&gt; { result ->
+    if (result.errorCode == ProfilingResult.ERROR_NONE) {
+        uploadHeapDump(result.resultFilePath) // 서버로 전송해 분석
+    }
+}
+
+profilingManager.registerForAllProfilingResults(executor, callback)
+profilingManager.addProfilingTriggers(triggers)</code></pre>
+
+<p>"문제가 터졌을 때 누군가가 덤프를 뜨기를" 기다릴 필요가 없어진다. 이상이 감지된 <em>그 시점</em>의 힙이 자동으로 잡힌다.</p>
+
+<h3>3-3. LeakCanary × Android Studio Panda</h3>
+<p>Android Studio Panda 버전부터 <strong>LeakCanary가 Profiler에 정식 통합</strong>된다.</p>
+<ul class="check-list">
+  <li>별도 의존성 추가 없이 IDE 태스크로 실행 가능</li>
+  <li>누수 참조 체인을 소스 코드와 직접 연결해 보여줌</li>
+  <li>기존 LeakCanary 라이브러리를 쓰는 팀은 계속 병행 사용 가능</li>
+</ul>
+<p>현실적으로 대부분의 "MemoryLimiter 종료"는 <strong>누수가 원인</strong>이다. 누수 제거 = 이번 정책에 대한 가장 확실한 방어.</p>
+
+<h3>3-4. 평상시 메모리 예산 관리</h3>
+<p>OS가 강제하기 전에, 팀 자체의 메모리 예산을 운영하는 것이 좋다.</p>
+
+<div class="two-col">
+  <div>
+    <h4>베이스라인 설정</h4>
+    <p>주요 화면별 idle PSS/RSS를 측정하고 CI에 기록. Macrobenchmark + Baseline Profile로 회귀 감지.</p>
+  </div>
+  <div>
+    <h4>Bitmap · Cache 튜닝</h4>
+    <p><code>LruCache</code> 크기 상한 점검, <code>Bitmap.Config</code> 검토, Glide/Coil 메모리 캐시 정책 조정.</p>
+  </div>
+  <div>
+    <h4>누수 상습범 점검</h4>
+    <p><code>Context</code>/<code>View</code> 누수, static 컬렉션, <code>Handler</code>·리스너 해제 누락, 코루틴 스코프 관리.</p>
+  </div>
+  <div>
+    <h4>대용량 객체 정리</h4>
+    <p>오래 살아있는 싱글톤에 ML 모델·큰 JSON·Bitmap을 얹고 있지 않은지 점검.</p>
+  </div>
+</div>
+
+<hr>
+
+<h2>4. 철학: "Deterministic Android"</h2>
+
+<p>이번 변경에서 구글이 유독 강조하는 단어는 <strong>deterministic(결정적)</strong> 이다.</p>
+
+<div class="two-col">
+  <div>
+    <h4>지금까지</h4>
+    <p>메모리 먹는 앱 때문에 <strong>무고한 앱과 OS가 욕을 먹던</strong> 시대. "왜 죽었는지 모르겠다"가 기본값.</p>
+  </div>
+  <div>
+    <h4>앞으로</h4>
+    <p><strong>원인이 정확히 죽고, 이유가 명확히 찍히는</strong> 시대. <code>"MemoryLimiter"</code> 라벨이 답을 알려준다.</p>
+  </div>
+</div>
+
+<p>개발자 입장에서 일회성 불편처럼 보일 수 있지만, 생태계 전체로 보면 훨씬 공정한 규칙이다. 누수가 없는 앱은 지금까지 <strong>이유 없이 피해만 봐왔다</strong>. 이제 원인 제공 앱이 책임을 진다.</p>
+
+<p>사용자 입장에서도 체감 이득이 크다.</p>
+<ul class="check-list">
+  <li>멀티태스킹이 안정됨 — 백그라운드 앱이 덜 죽음</li>
+  <li>배터리 소모 감소 — GC·스왑 감소</li>
+  <li>폼 팩터 전반에서 일관된 경험</li>
+</ul>
+
+<hr>
+
+<h2>5. 지금 당장 해야 할 일</h2>
+
+<ol class="step-list">
+  <li><strong>테스트 환경에 Android 17 Beta 4를 올려라.</strong> 실제 문제가 있다면 지금 드러난다.</li>
+  <li><strong><code>ApplicationExitInfo</code> 수집을 운영 빌드에 심어라.</strong> <code>"MemoryLimiter"</code> 카운트를 대시보드에.</li>
+  <li><strong><code>ProfilingManager</code> 기반 이상 힙덤프 자동 수집</strong>을 붙여라.</li>
+  <li><strong>LeakCanary 체크 루프</strong>를 PR 리뷰 플로우에 포함시켜라.</li>
+  <li>팀의 <strong>메모리 예산 베이스라인</strong>을 문서화하고 회귀를 CI에서 잡아라.</li>
+</ol>
+
+<div class="callout warn">
+  <strong>주의:</strong> Beta 4에서는 기준이 보수적이지만, 정식 릴리즈에서 더 조여질 가능성이 높다. <em>지금 대응하지 않으면 정식 출시 후 사용자 크래시 리포트로 배우게 된다.</em>
+</div>
+
+<hr>
+
+<h2>6. 마치며</h2>
+
+<p>App Memory Limit은 기능 추가가 아니라 <strong>규칙 변경</strong>이다. Android가 "원하는 만큼 써, 대신 운 나쁘면 누가 죽을지 몰라"에서 <strong>"네 몫만큼 써. 넘치면 네가 죽는다"</strong>로 바뀌는 것.</p>
+
+<p>이 변화는 당장은 불편할 수 있지만, 모든 앱이 같은 규칙 위에서 경쟁하게 만든다. 좋은 앱은 보상을 받고, 방치된 누수는 숨을 곳이 없어진다. <strong>Deterministic Android</strong>의 시작점, App Memory Limit을 가볍게 보지 말자.</p>
+
+<div class="footer-note">
+  참고: Android Developers Blog — <em>The fourth beta of Android 17</em> · <code>android.app.ApplicationExitInfo</code> · <code>android.os.ProfilingManager</code> · LeakCanary (Android Studio Panda 통합)
+</div>
+
+</div>
+</body>
+</html>
