@@ -423,6 +423,93 @@
     border-top: 8px solid var(--border-strong);
   }
 
+  /* Timeline */
+  .timeline {
+    position: relative;
+    margin: 26px 0 32px;
+    padding: 6px 0;
+  }
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 78px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: var(--border-strong);
+  }
+  .tl-item {
+    position: relative;
+    padding: 10px 0 18px 112px;
+  }
+  .tl-item::before {
+    content: "";
+    position: absolute;
+    left: 72px;
+    top: 20px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--border-strong);
+    box-sizing: border-box;
+  }
+  .tl-item.highlight::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .tl-item.climax::before {
+    background: var(--danger);
+    border-color: var(--danger);
+    box-shadow: 0 0 0 4px var(--danger-soft);
+  }
+  .tl-year {
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 58px;
+    text-align: right;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.78em;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .tl-version {
+    font-size: 0.72em;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .tl-item.highlight .tl-version { color: var(--accent); }
+  .tl-item.climax .tl-version { color: var(--danger); }
+  .tl-title {
+    font-weight: 700;
+    color: var(--text-strong);
+    font-size: 1em;
+    margin-bottom: 4px;
+  }
+  .tl-desc {
+    font-size: 0.92em;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .tl-desc code { font-size: 0.9em; }
+  @media (max-width: 600px) {
+    .timeline::before { left: 22px; }
+    .tl-item { padding: 6px 0 18px 48px; }
+    .tl-item::before { left: 16px; top: 14px; }
+    .tl-year {
+      position: static;
+      text-align: left;
+      width: auto;
+      margin-bottom: 2px;
+    }
+  }
+
   /* Checklist */
   .check-list {
     list-style: none;
@@ -475,6 +562,89 @@
     <li>대응: <code>ProfilingManager</code>의 <code>TRIGGER_TYPE_ANOMALY</code> 자동 힙덤프, LeakCanary(Android Studio Panda 통합), <code>ApplicationExitInfo</code> 모니터링.</li>
   </ul>
 </div>
+
+<h2>0. 프리퀄: Android 메모리 관리의 15년</h2>
+
+<p>App Memory Limit은 어느 날 갑자기 튀어나온 게 아니다. Android 메모리 관리는 <strong>"OS가 관여하는 범위"</strong>가 조금씩 넓어져 온 15년의 역사가 있고, 이번 변경은 그 흐름의 자연스러운 귀결이다.</p>
+
+<div class="timeline">
+  <div class="tl-item">
+    <div class="tl-year">2008</div>
+    <div class="tl-version">Android 1.x</div>
+    <div class="tl-title">Low Memory Killer 등장</div>
+    <div class="tl-desc">Linux의 OOM Killer를 모바일용으로 개조. <code>oom_score_adj</code> 기반 우선순위 킬. RAM 192 MB 시대의 생존 장치.</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2013</div>
+    <div class="tl-version">KitKat · Project Svelte</div>
+    <div class="tl-title">저사양 타겟 본격화</div>
+    <div class="tl-desc"><code>ActivityManager.isLowRamDevice()</code> API · <code>largeHeap</code> 옵션 · 512 MB 기기 타겟팅. 신흥 시장 대응의 시작.</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2014</div>
+    <div class="tl-version">Lollipop · ART</div>
+    <div class="tl-title">Dalvik → ART 전환</div>
+    <div class="tl-desc">AOT 컴파일 · GC 전면 개편. 런타임 메모리 효율이 대폭 개선됨. 이후 Concurrent Copying GC로 진화.</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2015</div>
+    <div class="tl-version">Marshmallow</div>
+    <div class="tl-title">Doze · App Standby</div>
+    <div class="tl-desc">화면이 꺼진 기기의 백그라운드 활동을 OS가 강제로 억제. "앱이 하고 싶은 대로 두지 않는다"의 첫 신호탄.</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2017</div>
+    <div class="tl-version">Oreo</div>
+    <div class="tl-title">Background Execution Limits</div>
+    <div class="tl-desc">백그라운드 서비스·브로드캐스트 강한 제한. WorkManager 전환 유도. CPU·전력 관점의 자원 통제가 본격화.</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2018</div>
+    <div class="tl-version">Pie</div>
+    <div class="tl-title">App Standby Buckets</div>
+    <div class="tl-desc">Active / Working / Frequent / Rare / Restricted 5단계로 앱의 자원 허용량을 계층화. 사용 패턴 기반 제어의 시작.</div>
+  </div>
+  <div class="tl-item highlight">
+    <div class="tl-year">2020</div>
+    <div class="tl-version">Android 11</div>
+    <div class="tl-title">ApplicationExitInfo API</div>
+    <div class="tl-desc">드디어 <strong>"우리 앱이 왜 죽었는지"</strong>를 조회 가능. <code>REASON_LOW_MEMORY</code>, <code>REASON_EXCESSIVE_RESOURCE_USAGE</code> 등. <em>관찰 가능성의 첫 도약.</em></div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2021</div>
+    <div class="tl-version">Android 12</div>
+    <div class="tl-title">Phantom Process Killer</div>
+    <div class="tl-desc">앱이 만드는 과도한 child process(네이티브 포크)를 OS가 제한. 음지에서 자원을 태우던 패턴을 막음.</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-year">2023</div>
+    <div class="tl-version">Android 14</div>
+    <div class="tl-title">Cached Apps Freezer</div>
+    <div class="tl-desc">캐시된 앱을 cgroup으로 동결(SIGSTOP). CPU 사이클과 메모리 압박을 줄여 포그라운드 앱 반응성을 확보.</div>
+  </div>
+  <div class="tl-item highlight">
+    <div class="tl-year">2024</div>
+    <div class="tl-version">Android 15</div>
+    <div class="tl-title">ProfilingManager + 이상 트리거</div>
+    <div class="tl-desc"><code>TRIGGER_TYPE_ANOMALY</code> 등으로 시스템 이상 시 자동 프로파일 수집. <em>관찰을 넘어 자동 진단으로.</em></div>
+  </div>
+  <div class="tl-item climax">
+    <div class="tl-year">2026</div>
+    <div class="tl-version">Android 17</div>
+    <div class="tl-title">App Memory Limit (MemoryLimiter)</div>
+    <div class="tl-desc">앱별 RAM 상한을 OS가 <strong>강제</strong>. 관찰·진단을 넘어 <strong>집행</strong>의 시대로. 원인 제공 앱이 직접 종료되는 deterministic 모델.</div>
+  </div>
+</div>
+
+<p>큰 흐름을 한 줄로 요약하면 이렇다.</p>
+
+<blockquote>
+  <p><strong>LMK(사후 단죄)</strong> → <strong>백그라운드 제한</strong>(시간·이벤트) → <strong>관찰 가능성</strong>(<code>ApplicationExitInfo</code>) → <strong>자동 진단</strong>(<code>ProfilingManager</code>) → <strong>집행</strong>(App Memory Limit)</p>
+</blockquote>
+
+<p>매 단계마다 "앱에게 맡겨 두던 것을 OS가 하나씩 가져오는" 방향이다. Android 17의 메모리 상한은 그 여정의 <strong>현재 정점</strong>이자, 앞으로도 이어질 "deterministic Android"의 출발선이다.</p>
+
+<hr>
 
 <h2>1. 배경: 왜 지금 "메모리 상한"인가</h2>
 
