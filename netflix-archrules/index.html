@@ -644,6 +644,125 @@
       font-weight: 700;
     }
 
+    /* ---- Leverage Viz (1 rule → 14 repos) ---- */
+    .leverage {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin: 24px 0;
+      box-shadow: var(--shadow);
+    }
+    .leverage-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .leverage-row {
+      display: grid;
+      grid-template-columns: 1fr auto 2fr;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .lev-side { text-align: center; }
+    .lev-num {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .lev-side.target .lev-num { color: var(--blue); }
+    .lev-icons {
+      font-size: 24px;
+      margin: 6px 0 4px;
+      line-height: 1.4;
+      word-break: break-all;
+    }
+    .lev-label {
+      font-size: 12px;
+      color: var(--gray);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .lev-arrow {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      white-space: nowrap;
+      text-align: center;
+    }
+    .lev-arrow-line {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .lev-context {
+      background: var(--accent-light);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 14px;
+      color: var(--accent-dark);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* ---- Dot Grid Viz (100 cells, X red) ---- */
+    .dotviz {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin: 24px 0;
+      box-shadow: var(--shadow);
+    }
+    .dotviz-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .dotviz-sub {
+      font-size: 12px;
+      color: var(--gray);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .dot-grid {
+      display: grid;
+      grid-template-columns: repeat(50, 1fr);
+      gap: 2px;
+      max-width: 520px;
+      margin: 0 auto 16px;
+    }
+    .dot-cell {
+      aspect-ratio: 1 / 1;
+      background: #d1d5db;
+      border-radius: 1px;
+    }
+    .dot-cell.red {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(229,9,20,0.4);
+      border-radius: 2px;
+      z-index: 1;
+      position: relative;
+    }
+    .dot-legend {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-sq {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+    }
+    .legend-sq.red { background: var(--accent); }
+    .legend-sq.gray { background: #d1d5db; }
+
     footer {
       text-align: center;
       padding: 40px 24px;
@@ -683,6 +802,9 @@
       .impact-targets { grid-template-columns: repeat(5, 1fr); }
       .impact-fan { max-width: 360px; }
       .bar-row { grid-template-columns: 90px 1fr; gap: 10px; }
+      .leverage-row { grid-template-columns: 1fr; gap: 8px; text-align: center; }
+      .lev-arrow { transform: rotate(90deg); }
+      .dot-grid { grid-template-columns: repeat(40, 1fr); }
     }
 
     @media (max-width: 480px) {
@@ -733,6 +855,12 @@
       .bar-value-tail { font-size: 11px; padding-left: 8px; }
       .bar-track { height: 24px; }
       .barchart { padding: 18px 14px; }
+      .lev-num { font-size: 28px; }
+      .lev-icons { font-size: 18px; }
+      .dot-grid { grid-template-columns: repeat(30, 1fr); gap: 1px; }
+      .dotviz { padding: 18px 14px; }
+      .dotviz-sub { font-size: 11px; }
+      .dot-legend { gap: 12px; font-size: 12px; }
       footer { padding: 28px 14px; font-size: 12px; }
     }
 
@@ -1142,45 +1270,55 @@
 
     <h3>비율로 보면 더 와닿아</h3>
 
-    <div class="barchart">
-      <div class="barchart-title">📐 규모의 가시화</div>
-      <div class="bar-row">
-        <div class="bar-label">저장소</div>
-        <div class="bar-track">
-          <div class="bar-fill red" style="width: 100%;">5,000+</div>
+    <div class="leverage">
+      <div class="leverage-title">📐 규칙 1개의 레버리지</div>
+      <div class="leverage-row">
+        <div class="lev-side">
+          <div class="lev-num">1</div>
+          <div class="lev-icons">📋</div>
+          <div class="lev-label">규칙</div>
+        </div>
+        <div class="lev-arrow">
+          <div class="lev-arrow-line">━━━▶</div>
+          <div>커버</div>
+        </div>
+        <div class="lev-side target">
+          <div class="lev-num">~14</div>
+          <div class="lev-icons">📦📦📦📦📦📦📦<br>📦📦📦📦📦📦📦</div>
+          <div class="lev-label">저장소</div>
         </div>
       </div>
-      <div class="bar-row">
-        <div class="bar-label">규칙</div>
-        <div class="bar-track">
-          <div class="bar-fill blue" style="width: 7.2%; min-width: 14px;"></div>
-          <span class="bar-value-tail" style="color: #1e40af;">358</span>
-        </div>
-      </div>
-      <div class="ratio-callout">
-        🧮 규칙 1개당 ≈ <strong>14개 저장소</strong>를 동시에 단속해
+      <div class="lev-context">
+        🧮 전체로는 <strong>358 규칙</strong> × 14 ≈ <strong>5,000+ 저장소</strong>를 자동 단속
       </div>
     </div>
 
-    <div class="barchart">
-      <div class="barchart-title">⚠️ 탐지된 100만 건의 우선순위 분포</div>
-      <div class="bar-row">
-        <div class="bar-label">Normal</div>
-        <div class="bar-track">
-          <div class="bar-fill normal" style="width: 99.9%;">~999,000 (99.9%)</div>
-        </div>
+    <div class="dotviz">
+      <div class="dotviz-title">⚠️ 탐지된 100만 건 중 시급한 비율</div>
+      <div class="dotviz-sub">사각형 1개 = 1,000건 &middot; 전체 1,000칸 = 100만 건 &middot; 빨간 1칸이 곧 "Critical"</div>
+      <div class="dot-grid" id="dots1000"></div>
+      <div class="dot-legend">
+        <span class="legend-item"><span class="legend-sq red"></span>Critical ~1,000 (0.1%)</span>
+        <span class="legend-item"><span class="legend-sq gray"></span>Normal ~999,000 (99.9%)</span>
       </div>
-      <div class="bar-row">
-        <div class="bar-label">Critical</div>
-        <div class="bar-track">
-          <div class="bar-fill critical" style="width: 1.5%; min-width: 10px;"></div>
-          <span class="bar-value-tail" style="color: var(--accent-dark);">~1,000 (0.1%)</span>
-        </div>
-      </div>
-      <div class="ratio-callout">
-        🎯 100만 건 중 <strong>0.1%만 진짜 시급</strong> &mdash; 우선순위 분류 덕에 "어디부터 손볼지" 명확
+      <div class="lev-context" style="margin-top: 16px;">
+        🎯 회색 바다 속 빨간 점 <strong>딱 1개</strong> &mdash; 우선순위 분류 덕에 100만 건 중 "어디부터 손볼지" 즉시 보임
       </div>
     </div>
+
+    <script>
+      (function() {
+        var grid = document.getElementById('dots1000');
+        if (!grid) return;
+        var total = 1000;
+        var redIdx = 492; // 가운데 살짝 위쪽 한 칸만 빨강
+        var html = '';
+        for (var i = 0; i < total; i++) {
+          html += '<span class="dot-cell' + (i === redIdx ? ' red' : '') + '"></span>';
+        }
+        grid.innerHTML = html;
+      })();
+    </script>
 
     <h3>처음 문제로 돌아가서</h3>
     <p>이제 라이브러리 작성자는 매일 아침 자동 리포트를 받아:</p>
