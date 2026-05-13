@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTP: 초등학생도 이해하는 AI 추론 가속 해설</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+        :root {
+            --bg: #fefcf9;
+            --text: #2c2c2c;
+            --accent: #4a6cf7;
+            --accent-light: #e8eeff;
+            --green: #22c55e;
+            --green-light: #dcfce7;
+            --orange: #f59e0b;
+            --orange-light: #fef3c7;
+            --red: #ef4444;
+            --red-light: #fee2e2;
+            --purple: #8b5cf6;
+            --purple-light: #ede9fe;
+            --teal: #14b8a6;
+            --teal-light: #ccfbf1;
+            --gray: #6b7280;
+            --gray-light: #f3f4f6;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 17px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(254,252,249,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 0 24px;
+        }
+
+        nav .inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 24px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        nav .inner::-webkit-scrollbar { display: none; }
+
+        nav a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a.active { color: var(--accent); }
+
+        nav .logo {
+            font-weight: 900;
+            font-size: 16px;
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        .hero {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 100px 24px 48px;
+            text-align: center;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span { color: var(--accent); }
+
+        .hero .subtitle {
+            font-size: 18px;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+
+        .hero .meta {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        .chapter {
+            margin-top: 64px;
+            margin-bottom: 32px;
+            padding-top: 32px;
+            border-top: 3px solid var(--accent);
+        }
+
+        .chapter-num {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .chapter h2 {
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.3;
+        }
+
+        h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 28px;
+            margin-bottom: 8px;
+        }
+
+        p { margin-bottom: 16px; }
+        strong { font-weight: 700; }
+
+        ul, ol { margin: 12px 0 16px 24px; }
+        li { margin-bottom: 6px; }
+
+        .analogy {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding: 20px 24px;
+            margin: 20px 0;
+        }
+
+        .analogy.green { background: var(--green-light); border-color: var(--green); }
+        .analogy.orange { background: var(--orange-light); border-color: var(--orange); }
+        .analogy.purple { background: var(--purple-light); border-color: var(--purple); }
+        .analogy.red { background: var(--red-light); border-color: var(--red); }
+        .analogy.teal { background: var(--teal-light); border-color: var(--teal); }
+
+        .analogy .label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        .analogy .label.blue { color: var(--accent); }
+        .analogy .label.green { color: var(--green); }
+        .analogy .label.orange { color: var(--orange); }
+        .analogy .label.purple { color: var(--purple); }
+        .analogy .label.red { color: var(--red); }
+        .analogy .label.teal { color: var(--teal); }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #4a6cf7 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin: 28px 0;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .highlight-box h3, .highlight-box h4 { color: white; margin-top: 0; }
+        .highlight-box p { margin-bottom: 8px; }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        thead { background: var(--gray-light); }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray);
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover td { background: rgba(74,108,247,0.03); }
+
+        .winner { background: var(--green-light) !important; font-weight: 700; }
+
+        .flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 28px 0;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 280px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            font-size: 15px;
+        }
+
+        .flow-step.accent { background: var(--accent); color: white; }
+        .flow-step.accent .flow-desc { color: rgba(255,255,255,0.85); }
+        .flow-step.purple-bg { background: var(--purple); color: white; border-color: var(--purple); }
+        .flow-step.green-bg { background: var(--green); color: white; border-color: var(--green); }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: var(--accent);
+            line-height: 1;
+            padding: 4px 0;
+        }
+
+        .flow-desc {
+            font-size: 13px;
+            color: var(--gray);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin: 28px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .stat-card .unit {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .glossary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .glossary-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .glossary-item .term {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+
+        .glossary-item .def {
+            font-size: 14px;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .compare-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .compare-card h4 { margin-top: 0; margin-bottom: 12px; }
+        .compare-card ul { list-style: none; padding: 0; margin: 0; }
+        .compare-card ul li {
+            padding: 4px 0;
+            font-size: 15px;
+            margin-bottom: 0;
+        }
+        .compare-card ul li::before {
+            content: "• ";
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .emoji-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .emoji-flow .arrow { font-size: 24px; color: var(--accent); }
+        .emoji-flow .step {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-block .comment { color: #6c7086; }
+        .code-block .keyword { color: #cba6f7; }
+        .code-block .string { color: #a6e3a1; }
+        .code-block .number { color: #fab387; }
+
+        code {
+            background: var(--gray-light);
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.9em;
+            color: var(--accent);
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .scenario-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s;
+        }
+        .scenario-card:hover { box-shadow: var(--shadow-lg); }
+        .scenario-card .icon { font-size: 32px; margin-bottom: 8px; }
+        .scenario-card h4 { margin-top: 0; margin-bottom: 8px; }
+        .scenario-card p { font-size: 15px; color: var(--gray); margin-bottom: 0; }
+
+        .reading-time {
+            display: inline-block;
+            background: var(--gray-light);
+            color: var(--gray);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--gray);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        footer a { color: var(--accent); text-decoration: none; }
+
+        html { scroll-behavior: smooth; }
+
+        @media (max-width: 768px) {
+            body { font-size: 16px; }
+            .hero { padding: 80px 16px 36px; }
+            .hero h1 { font-size: 28px; }
+            .content { padding: 0 16px 60px; }
+            .compare-grid { grid-template-columns: 1fr; }
+            .glossary { grid-template-columns: 1fr; }
+            .flow-step { min-width: auto; max-width: 100%; padding: 12px 16px; font-size: 14px; }
+            .flow-desc { font-size: 12px; }
+            .chapter h2 { font-size: 24px; }
+            h3 { font-size: 20px; }
+            h4 { font-size: 16px; }
+            .highlight-box { padding: 20px 24px; }
+            .code-block { padding: 14px 16px; font-size: 13px; }
+            .table-wrap { margin: 16px -16px; border-radius: 0; border-left: 0; border-right: 0; }
+            .scenario-grid { grid-template-columns: 1fr; }
+            .emoji-flow .step { font-size: 13px; padding: 8px 12px; }
+        }
+
+        @media (max-width: 480px) {
+            body { font-size: 15px; line-height: 1.75; }
+            .hero { padding: 68px 14px 28px; }
+            .hero h1 { font-size: 24px; }
+            .hero .subtitle { font-size: 15px; }
+            .content { padding: 0 14px 48px; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-card .number { font-size: 24px; }
+            .stat-card .unit { font-size: 12px; }
+            .emoji-flow { font-size: 14px; gap: 4px; }
+            .emoji-flow .step { padding: 6px 10px; font-size: 12px; }
+            .emoji-flow .arrow { font-size: 18px; }
+            .chapter h2 { font-size: 22px; }
+            h3 { font-size: 18px; }
+            .analogy { padding: 14px 16px; }
+            .highlight-box { padding: 16px 18px; border-radius: 12px; }
+            .highlight-box h4 { font-size: 16px; }
+            .compare-card { padding: 14px 16px; }
+            .compare-card h4 { font-size: 15px; }
+            .flow-step { padding: 10px 14px; font-size: 13px; border-radius: 10px; }
+            .code-block { font-size: 11px; padding: 12px 14px; }
+            .glossary-item { padding: 10px 14px; }
+            .glossary-item .term { font-size: 13px; }
+            .glossary-item .def { font-size: 13px; }
+            nav .inner { gap: 16px; }
+            nav a { font-size: 12px; }
+            .scenario-card { padding: 14px 16px; }
+            .scenario-card .icon { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="inner">
+        <span class="logo">MTP</span>
+        <a href="#ch0">소개</a>
+        <a href="#ch1">문제</a>
+        <a href="#ch2">기존 방법</a>
+        <a href="#ch3">작동 원리</a>
+        <a href="#ch4">Gemma 4</a>
+        <a href="#ch5">성능</a>
+        <a href="#ch6">정리</a>
+        <a href="#glossary">용어사전</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="badge">Inference Speedup &middot; 2026년 5월 &middot; Google Research</div>
+    <h1>MTP<br><span>초등학생도 이해하는</span><br>AI 추론 가속 해설</h1>
+    <p class="subtitle">Gemma 4의 추론 속도를 최대 3배 끌어올린 비밀, "한 번에 여러 단어를 예측한다"는 게 도대체 무슨 뜻일까?</p>
+    <p class="meta">원본: <strong>Accelerating Gemma 4 with Multi-Token Prediction Drafters</strong><br>Google Research (2026.05) &middot; 원논문 Meta (<a href="https://arxiv.org/abs/2404.19737" target="_blank">arXiv:2404.19737</a>, 2024)</p>
+    <span class="reading-time">약 12분 소요</span>
+</section>
+
+<div class="content">
+
+    <!-- ===== Chapter 0: 소개 ===== -->
+    <div class="chapter" id="ch0">
+        <div class="chapter-num">Chapter 0</div>
+        <h2>이 기술이 뭔데?</h2>
+    </div>
+
+    <p><strong>MTP (Multi-Token Prediction)</strong>는 AI가 글을 쓸 때, <strong>한 단어씩 만드는 대신 여러 단어를 한꺼번에 예측</strong>해서 속도를 끌어올리는 기술이에요. 원래는 2024년 Meta가 논문으로 처음 제안했고, 2026년 5월에 <strong>Google이 Gemma 4용 MTP Drafter</strong>를 공개하면서 화제가 됐어요.</p>
+
+    <div class="highlight-box">
+        <h4>🎯 한 줄 요약</h4>
+        <p>작은 모델(Drafter)이 다음 N개 단어를 미리 추측해서 적어두면, 큰 모델은 그걸 한 번에 검사하기만 하면 돼요. 검사는 큰 모델이 직접 하니까 <strong>품질은 그대로</strong>, 속도는 <strong>최대 3배</strong>!</p>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">3×</div>
+            <div class="unit">최대 추론 속도</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">0%</div>
+            <div class="unit">품질 저하</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">무료</div>
+            <div class="unit">Apache 2.0 라이선스</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">5종</div>
+            <div class="unit">지원 런타임<br>(Ollama, vLLM 등)</div>
+        </div>
+    </div>
+
+    <!-- ===== Chapter 1: 문제 ===== -->
+    <div class="chapter" id="ch1">
+        <div class="chapter-num">Chapter 1</div>
+        <h2>도대체 뭐가 느린 거야?</h2>
+    </div>
+
+    <p>ChatGPT나 Gemini 같은 AI는 글을 쓸 때 단어(토큰)를 <strong>한 번에 하나씩</strong> 만들어요. 다음 단어를 만들려면 지금까지 만든 모든 단어를 다시 모델에 넣고, 또 한 번 거대한 계산을 해야 해요. 이걸 <strong>"자동회귀 생성(Autoregressive Generation)"</strong>이라고 불러요.</p>
+
+    <div class="analogy">
+        <div class="label blue">비유 1 · 받아쓰기</div>
+        <p>선생님이 한 글자씩 부르고, 학생이 받아쓴 다음 또 한 글자 들으러 가는 상황이에요. 100글자 받아쓰려면 <strong>100번 왔다 갔다</strong>. 왕복하는 시간이 글자 쓰는 시간보다 더 길어요.</p>
+        <p style="margin-bottom:0">AI도 마찬가지예요. <strong>모델 가중치를 GPU 메모리에서 읽어오는 시간</strong>이 실제 계산보다 훨씬 길어요. 그래서 한 번 읽어올 때 한 글자만 만드는 게 너무 아깝죠.</p>
+    </div>
+
+    <h3>왜 이게 중요한가요?</h3>
+    <div class="compare-grid">
+        <div class="compare-card">
+            <h4>💸 비용</h4>
+            <ul>
+                <li>같은 답을 만들면서 전기료 1/3</li>
+                <li>같은 GPU로 3배 많은 사용자 처리</li>
+                <li>데이터센터 운영비 절감</li>
+            </ul>
+        </div>
+        <div class="compare-card">
+            <h4>⚡ 사용자 경험</h4>
+            <ul>
+                <li>답변 대기 시간이 1/3</li>
+                <li>스트리밍 응답이 더 매끄러움</li>
+                <li>로컬 노트북에서도 큰 모델 실행 가능</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== Chapter 2: 기존 방법 ===== -->
+    <div class="chapter" id="ch2">
+        <div class="chapter-num">Chapter 2</div>
+        <h2>지금까지는 어떻게 빠르게 했어?</h2>
+    </div>
+
+    <p>AI를 빠르게 만드는 방법은 여러 가지가 있었어요. 하지만 대부분 "<strong>품질을 조금 포기하고 속도를 얻는</strong>" 거래였죠.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>방법</th>
+                    <th>비유</th>
+                    <th>속도</th>
+                    <th>품질</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>양자화</strong><br>(Quantization)</td>
+                    <td>📐 정밀한 자 대신 거친 자로 재기</td>
+                    <td>↑ 빨라짐</td>
+                    <td style="color:var(--red)">↓ 살짝 저하</td>
+                </tr>
+                <tr>
+                    <td><strong>가지치기</strong><br>(Pruning)</td>
+                    <td>✂️ 별로 안 쓰는 가지를 잘라냄</td>
+                    <td>↑ 빨라짐</td>
+                    <td style="color:var(--red)">↓ 저하 위험</td>
+                </tr>
+                <tr>
+                    <td><strong>증류</strong><br>(Distillation)</td>
+                    <td>👨‍🏫 작은 모델이 큰 모델 따라하기</td>
+                    <td>↑↑ 매우 빠름</td>
+                    <td style="color:var(--red)">↓ 한계 있음</td>
+                </tr>
+                <tr class="winner">
+                    <td>🌟 <strong>MTP</strong><br>(이 글의 주인공)</td>
+                    <td>🤝 작은 모델 추측 + 큰 모델 검증</td>
+                    <td>↑↑ 최대 3배</td>
+                    <td style="color:var(--green)">✓ 완전 동일</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="analogy green">
+        <div class="label green">MTP가 특별한 이유</div>
+        <p style="margin-bottom:0">다른 방법들은 모두 "품질을 조금 포기하고 속도를 얻는" 거래였어요. 하지만 MTP는 <strong>품질을 전혀 포기하지 않으면서</strong> 속도만 얻습니다. 어떻게 그게 가능할까요? 다음 챕터에서 살펴봐요.</p>
+    </div>
+
+    <!-- ===== Chapter 3: 작동 원리 ===== -->
+    <div class="chapter" id="ch3">
+        <div class="chapter-num">Chapter 3</div>
+        <h2>MTP는 어떻게 작동해?</h2>
+    </div>
+
+    <p>MTP의 핵심은 <strong>드래프터(Drafter)와 검증자(Verifier)의 환상의 콤비</strong>예요. 작은 모델이 추측하고, 큰 모델이 검증하는 방식이죠.</p>
+
+    <h3>한 장면으로 이해하기</h3>
+    <div class="flow">
+        <div class="flow-step accent">
+            📝 1단계: 추측
+            <div class="flow-desc">작은 Drafter가 다음 4개 단어를 빠르게 추측</div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step purple-bg">
+            🔍 2단계: 검증
+            <div class="flow-desc">큰 Target 모델이 4개를 한 번의 forward pass로 병렬 검증</div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step green-bg">
+            ✅ 3단계: 채택
+            <div class="flow-desc">맞은 토큰은 한꺼번에 채택 + 보너스 1개 더!</div>
+        </div>
+    </div>
+
+    <div class="analogy purple">
+        <div class="label purple">비유 2 · 받아쓰기 짝꿍</div>
+        <p>이번에는 옆에 짝꿍이 생겼어요!</p>
+        <ul style="margin-bottom:0">
+            <li><strong>짝꿍 (Drafter):</strong> 선생님 입모양만 보고 "다음 4글자는 아마 '안녕하세요'일 거야!" 하고 미리 적어둠</li>
+            <li><strong>나 (Target Model):</strong> 짝꿍이 쓴 4글자를 보고 "맞네!" 한 번에 검사</li>
+            <li>✅ 맞으면 → 4글자가 한 번에 완성, 다음 1글자도 보너스</li>
+            <li>❌ 틀린 곳이 있으면 → 그 지점부터 내가 직접 다시 씀</li>
+        </ul>
+    </div>
+
+    <h3>4가지 핵심 기술</h3>
+
+    <div class="compare-grid">
+        <div class="compare-card">
+            <h4>1️⃣ Draft Model</h4>
+            <p style="font-size:14px;color:var(--gray);margin-bottom:8px">미리 추측하는 작은 모델</p>
+            <ul>
+                <li>본 모델보다 30~100배 작음</li>
+                <li>Gemma 4 기준 약 2~3억 파라미터</li>
+                <li>빠르지만 가끔 틀려도 OK</li>
+            </ul>
+        </div>
+        <div class="compare-card">
+            <h4>2️⃣ Speculative Verification</h4>
+            <p style="font-size:14px;color:var(--gray);margin-bottom:8px">병렬 검증</p>
+            <ul>
+                <li>N개 토큰을 한 번에 검사</li>
+                <li>GPU 병렬성을 그대로 활용</li>
+                <li>1개 만드는 시간 = N개 검증 시간</li>
+            </ul>
+        </div>
+        <div class="compare-card">
+            <h4>3️⃣ KV 캐시 공유</h4>
+            <p style="font-size:14px;color:var(--gray);margin-bottom:8px">Drafter가 본 모델에 기생</p>
+            <ul>
+                <li>본 모델의 activation을 빌려 씀</li>
+                <li>같은 컨텍스트 재계산 없음</li>
+                <li>Drafter의 추가 비용이 거의 0</li>
+            </ul>
+        </div>
+        <div class="compare-card">
+            <h4>4️⃣ +1 보너스 토큰</h4>
+            <p style="font-size:14px;color:var(--gray);margin-bottom:8px">덤으로 받는 한 개</p>
+            <ul>
+                <li>검증 중에 다음 토큰 자동 생성</li>
+                <li>Drafter 4개 → 최대 5개 출력</li>
+                <li>한 번 돌리는 시간에 5개!</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="analogy orange">
+        <div class="label orange">중요 · 품질은 왜 그대로일까?</div>
+        <p style="margin-bottom:0"><strong>검증은 본 모델이 직접</strong> 하기 때문이에요. Drafter가 어떤 추측을 하든, 본 모델이 동의하지 않으면 채택되지 않아요. 그래서 <strong>최종 출력은 본 모델 혼자 한 것과 100% 동일</strong>합니다. 단지 본 모델을 돌리는 횟수만 줄어든 거예요.</p>
+    </div>
+
+    <!-- ===== Chapter 4: Gemma 4 ===== -->
+    <div class="chapter" id="ch4">
+        <div class="chapter-num">Chapter 4</div>
+        <h2>Gemma 4는 뭐가 특별해?</h2>
+    </div>
+
+    <p>MTP 자체는 일반적인 기법이에요. 하지만 Google이 Gemma 4에 맞춰 만든 <strong>MTP Drafter</strong>는 몇 가지 특별한 점이 있어요.</p>
+
+    <div class="scenario-grid">
+        <div class="scenario-card">
+            <div class="icon">🧠</div>
+            <h4>본 모델의 뇌를 빌려 씀</h4>
+            <p>Drafter가 본 모델의 internal activation을 그대로 활용. 따로 계산할 필요 없음.</p>
+        </div>
+        <div class="scenario-card">
+            <div class="icon">🗂️</div>
+            <h4>KV 캐시 공유</h4>
+            <p>같은 컨텍스트를 두 번 인코딩하지 않음. 메모리도 절약.</p>
+        </div>
+        <div class="scenario-card">
+            <div class="icon">💻</div>
+            <h4>코딩 태스크에 특화</h4>
+            <p>코드는 패턴이 정형화돼서 추측 적중률이 높음. 그래서 가속 효과가 가장 큼.</p>
+        </div>
+    </div>
+
+    <h3>어디서 받을 수 있어?</h3>
+    <p>Apache 2.0 라이선스로 무료 공개됐어요. 대부분의 인기 런타임에서 지원해요.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>플랫폼</th>
+                    <th>용도</th>
+                    <th>지원 수준</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🤗 <strong>Hugging Face</strong></td>
+                    <td>Transformers 라이브러리</td>
+                    <td>✓ 안정</td>
+                </tr>
+                <tr>
+                    <td>⚡ <strong>vLLM / SGLang</strong></td>
+                    <td>고성능 서빙</td>
+                    <td>✓ 안정</td>
+                </tr>
+                <tr>
+                    <td>🍎 <strong>MLX</strong></td>
+                    <td>Apple Silicon 최적화</td>
+                    <td>✓ 안정</td>
+                </tr>
+                <tr>
+                    <td>🦙 <strong>Ollama</strong></td>
+                    <td>로컬 실행</td>
+                    <td>✓ Gemma 4 한정</td>
+                </tr>
+                <tr>
+                    <td>📊 <strong>Kaggle</strong></td>
+                    <td>모델 weights 다운로드</td>
+                    <td>✓ 안정</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Ollama로 써보기</h3>
+    <p>가장 간단한 방법은 Ollama예요. Modelfile에 <code>DRAFT</code> 한 줄만 추가하면 끝나요.</p>
+
+    <div class="code-block">
+<span class="comment"># Modelfile 만들기</span>
+<span class="keyword">FROM</span> gemma4:9b
+<span class="keyword">DRAFT</span> gemma4-9b-mtp
+
+<span class="comment"># 빌드 후 실행</span>
+$ ollama create my-fast-gemma -f Modelfile
+$ ollama run my-fast-gemma <span class="string">"FastAPI 코드 짜줘"</span></div>
+
+    <!-- ===== Chapter 5: 성능 ===== -->
+    <div class="chapter" id="ch5">
+        <div class="chapter-num">Chapter 5</div>
+        <h2>진짜로 얼마나 빨라졌어?</h2>
+    </div>
+
+    <p>마케팅의 "3배"는 <strong>최고 환경</strong>에서의 수치예요. 일반 사용자는 보통 <strong>1.7~2.2배</strong> 정도 체감해요.</p>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">3.0×</div>
+            <div class="unit"><strong>최고 환경</strong><br>26B MoE + RTX PRO 6000</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">2.2×</div>
+            <div class="unit"><strong>고성능 GPU</strong><br>일반 워크스테이션</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">1.7×</div>
+            <div class="unit"><strong>일반 노트북</strong><br>Mac M3 등</div>
+        </div>
+    </div>
+
+    <h3>작업 종류별 가속 효과</h3>
+
+    <div class="scenario-grid">
+        <div class="scenario-card" style="border-left: 4px solid var(--green);">
+            <div class="icon">💻</div>
+            <h4>코딩 (3.0×)</h4>
+            <p>패턴이 정형화돼서 Drafter 적중률 최고. <code>for (int i = 0; ...)</code> 같은 패턴은 거의 다 맞춤.</p>
+        </div>
+        <div class="scenario-card" style="border-left: 4px solid var(--accent);">
+            <div class="icon">📑</div>
+            <h4>기술 문서 (2.2×)</h4>
+            <p>구조적이고 반복되는 표현이 많음. Drafter가 잘 추측함.</p>
+        </div>
+        <div class="scenario-card" style="border-left: 4px solid var(--orange);">
+            <div class="icon">✍️</div>
+            <h4>창작 글쓰기 (1.5×)</h4>
+            <p>다음 단어가 예측 불가. Drafter가 자주 빗나가서 가속 효과 줄어듦.</p>
+        </div>
+    </div>
+
+    <h3>트레이드오프</h3>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>이득</th>
+                    <th>비용</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>속도</strong></td>
+                    <td style="color:var(--green)">최대 3배 ↑</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td><strong>품질</strong></td>
+                    <td style="color:var(--green)">완전히 동일</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td><strong>메모리</strong></td>
+                    <td>—</td>
+                    <td style="color:var(--red)">Drafter 추가로 ~10% 증가</td>
+                </tr>
+                <tr>
+                    <td><strong>설정</strong></td>
+                    <td>—</td>
+                    <td style="color:var(--red)">Modelfile 한 줄 추가</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ===== Chapter 6: 정리 ===== -->
+    <div class="chapter" id="ch6">
+        <div class="chapter-num">Chapter 6</div>
+        <h2>정리하면?</h2>
+    </div>
+
+    <p>MTP는 단순히 "AI가 좀 빨라지는" 기술이 아니에요. AI 비용 구조 자체를 바꾸는 기법이에요.</p>
+
+    <div class="highlight-box">
+        <h4>🚀 MTP가 열어주는 미래</h4>
+        <ul style="margin: 8px 0 0 24px;">
+            <li><strong>전기료 1/3:</strong> 같은 답을 더 적은 에너지로</li>
+            <li><strong>로컬 AI 시대:</strong> 노트북에서도 큰 모델이 부드럽게</li>
+            <li><strong>실시간 응답:</strong> 의료 진단, 동시통역 등 즉시성 필요한 영역</li>
+            <li><strong>탄소 발자국 감소:</strong> 데이터센터 전력 소비 절감</li>
+        </ul>
+    </div>
+
+    <h3>다른 모델들도 따라할까?</h3>
+    <p>이미 따라하고 있어요. <strong>DeepSeek V3</strong>는 학습 단계부터 MTP를 적용했고, <strong>Qwen 3.6</strong>도 MTP 지원을 추가했어요. 앞으로는 거의 모든 LLM이 MTP나 비슷한 <strong>Speculative Decoding</strong> 기법을 기본 탑재할 거예요.</p>
+
+    <div class="analogy teal">
+        <div class="label teal">자주 묻는 질문 · Claude Code 같은 클라우드 AI는?</div>
+        <p>사용자가 직접 MTP를 켜고 끌 수는 없어요. 클라우드 서비스는 제공자(Anthropic, OpenAI 등)가 <strong>서버 안에서 알아서</strong> 최적화하거든요.</p>
+        <p style="margin-bottom:0">하지만 안심하세요. 업계 표준이 된 만큼, 여러분이 쓰는 클라우드 AI도 비슷한 가속 기법으로 <strong>이미 빨라져 있을 가능성이 높아요</strong>.</p>
+    </div>
+
+    <div class="highlight-box" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">
+        <h4>⭐ 한 문장 결론</h4>
+        <p style="font-size: 18px; margin-bottom: 0;">"MTP는 AI한테 <strong>예지력 있는 짝꿍</strong>을 붙여준 기술 — 미리 답을 추측해두니까 본 모델은 검사만 하면 돼서 <strong>3배 빠르고, 답은 똑같다</strong>!"</p>
+    </div>
+
+    <!-- ===== Glossary ===== -->
+    <div class="chapter" id="glossary">
+        <div class="chapter-num">부록</div>
+        <h2>용어사전</h2>
+    </div>
+
+    <div class="glossary">
+        <div class="glossary-item">
+            <div class="term">MTP (Multi-Token Prediction)</div>
+            <div class="def">한 번에 여러 토큰을 예측하는 기법. 이 글의 주인공.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">토큰 (Token)</div>
+            <div class="def">AI가 글을 읽고 쓰는 최소 단위. 대략 단어 하나~두 개.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">자동회귀 (Autoregressive)</div>
+            <div class="def">단어를 한 개씩 순서대로 생성하는 방식. 정확하지만 느림.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Drafter (드래프터)</div>
+            <div class="def">다음 토큰들을 미리 추측하는 작은 모델. "비서" 역할.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Target Model</div>
+            <div class="def">실제 답을 만들어야 하는 큰 모델. "사장님" 역할.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Speculative Decoding</div>
+            <div class="def">"추측 디코딩". MTP의 학술적 이름. Drafter가 추측하고 Target이 검증하는 방식.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">KV 캐시</div>
+            <div class="def">AI가 이미 읽은 내용을 임시 저장하는 공간. 매번 재계산을 피함.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Forward Pass</div>
+            <div class="def">모델 한 번 통과시키는 계산. 비용이 커서 횟수 줄이는 게 핵심.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Activation</div>
+            <div class="def">모델 내부의 중간 계산 결과. Drafter가 빌려쓰면 자기 계산을 줄일 수 있음.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Gemma 4</div>
+            <div class="def">Google이 만든 오픈소스 LLM. Apache 2.0 라이선스.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">MoE (Mixture of Experts)</div>
+            <div class="def">여러 "전문가" 모델을 합쳐 만든 모델. 26B MoE는 26B 파라미터 MoE 모델.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">vLLM / SGLang</div>
+            <div class="def">LLM을 빠르게 서빙하는 추론 엔진들. MTP를 잘 지원.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Ollama</div>
+            <div class="def">로컬에서 LLM을 쉽게 실행하는 도구. <code>ollama run</code> 한 줄로 실행.</div>
+        </div>
+        <div class="glossary-item">
+            <div class="term">Apache 2.0</div>
+            <div class="def">오픈소스 라이선스. 상업적 사용 포함 자유롭게 사용 가능.</div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    이 해설은 <a href="https://blog.google/innovation-and-ai/technology/developers-tools/multi-token-prediction-gemma-4/" target="_blank">Google Blog</a>와 <a href="https://arxiv.org/abs/2404.19737" target="_blank">arXiv:2404.19737</a>을 바탕으로 초등학생 눈높이에 맞게 재구성했습니다.<br>
+    원본의 모든 권리는 저자들에게 있습니다. · 2026년 5월
+</footer>
+
+</body>
+</html>
