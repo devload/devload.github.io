@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Memory — 다섯 진영을 가르는 진짜 기준</title>
+    <meta name="description" content="Mem0, Letta, Memoir, Obsidian + MCP, Zep — 다섯 AI 에이전트 메모리 시스템의 정체성, 작동 구조, 1:1 비교, 시나리오 비교, 벤치마크를 시각화한 분석.">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        :root {
+            --bg: #fefcf9;
+            --text: #2c2c2c;
+            --accent: #4a6cf7;
+            --accent-light: #e8eeff;
+            --green: #22c55e;
+            --green-light: #dcfce7;
+            --orange: #f59e0b;
+            --orange-light: #fef3c7;
+            --purple: #8b5cf6;
+            --purple-light: #ede9fe;
+            --teal: #14b8a6;
+            --teal-light: #ccfbf1;
+            --pink: #ec4899;
+            --pink-light: #fce7f3;
+            --red: #ef4444;
+            --red-light: #fee2e2;
+            --gray: #6b7280;
+            --gray-light: #f3f4f6;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 17px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(254,252,249,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 0 24px;
+        }
+
+        nav .inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 24px;
+        }
+
+        nav .logo { font-weight: 900; font-size: 16px; color: var(--accent); }
+        nav a { color: var(--gray); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+        nav a:hover { color: var(--accent); }
+
+        .hero {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 100px 24px 36px;
+            text-align: center;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: var(--purple-light);
+            color: var(--purple);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span { color: var(--accent); }
+
+        .hero .subtitle {
+            font-size: 18px;
+            color: var(--gray);
+            max-width: 680px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+
+        .hero .meta {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ---------- Intent ---------- */
+
+        .intent {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin: 32px 0 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .intent .kicker { font-size: 12px; font-weight: 900; color: var(--accent); letter-spacing: 2px; margin-bottom: 10px; }
+        .intent h2 { font-size: 22px; font-weight: 900; margin-bottom: 14px; line-height: 1.4; }
+        .intent p { font-size: 16px; margin-bottom: 12px; line-height: 1.7; }
+        .intent p:last-child { margin-bottom: 0; }
+
+        .walls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            margin: 16px 0 24px;
+        }
+
+        .wall {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .wall .icon { font-size: 24px; margin-bottom: 8px; }
+        .wall h4 { font-size: 15px; font-weight: 900; margin-bottom: 8px; line-height: 1.3; }
+        .wall p { font-size: 13px; color: var(--gray); margin: 0; line-height: 1.6; }
+
+        .wall.w1 { border-top: 3px solid var(--red); }
+        .wall.w2 { border-top: 3px solid var(--orange); }
+        .wall.w3 { border-top: 3px solid var(--purple); }
+
+        /* ---------- Section header ---------- */
+
+        h2.section {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 60px 0 8px;
+            padding-top: 32px;
+            border-top: 3px solid var(--accent);
+            line-height: 1.3;
+        }
+
+        h2.section .num {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--accent);
+            background: var(--accent-light);
+            padding: 2px 10px;
+            border-radius: 6px;
+            margin-right: 10px;
+            vertical-align: middle;
+            font-weight: 700;
+        }
+
+        h3 { font-size: 19px; font-weight: 700; margin: 32px 0 12px; }
+        h3.with-line { padding-top: 24px; border-top: 1px dashed var(--border); }
+
+        p { margin-bottom: 16px; }
+        .section-lede { color: var(--gray); margin-bottom: 24px; line-height: 1.7; }
+
+        /* ---------- Positioning Map (2D) ---------- */
+
+        .pmap-wrap {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .pmap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1.3 / 1;
+            background: linear-gradient(135deg, #fafafa 0%, white 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .pmap .axis-y, .pmap .axis-x {
+            position: absolute;
+            background: var(--gray-light);
+        }
+        .pmap .axis-y { left: 50%; top: 5%; bottom: 5%; width: 1px; }
+        .pmap .axis-x { left: 5%; right: 5%; top: 50%; height: 1px; }
+
+        .pmap .label {
+            position: absolute;
+            font-size: 11px;
+            color: var(--gray);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .pmap .label.top    { top: 6px; left: 50%; transform: translateX(-50%); }
+        .pmap .label.bottom { bottom: 6px; left: 50%; transform: translateX(-50%); }
+        .pmap .label.left   { left: 10px; top: 50%; transform: translateY(-50%); }
+        .pmap .label.right  { right: 10px; top: 50%; transform: translateY(-50%); }
+
+        .pmap .quad-label {
+            position: absolute;
+            font-size: 10px;
+            color: #d1d5db;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .pmap .quad-label.q1 { top: 18%; right: 10%; }
+        .pmap .quad-label.q2 { top: 18%; left: 10%; }
+        .pmap .quad-label.q3 { bottom: 18%; left: 10%; }
+        .pmap .quad-label.q4 { bottom: 18%; right: 10%; }
+
+        .pmap .point {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            cursor: default;
+        }
+
+        .pmap .point .dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            margin: 0 auto;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .pmap .point .pname {
+            display: block;
+            font-size: 13px;
+            font-weight: 900;
+            margin-top: 6px;
+            white-space: nowrap;
+        }
+
+        .pmap .point.p-mem0   { left: 16%; top: 80%; }
+        .pmap .point.p-mem0 .dot { background: var(--accent); }
+        .pmap .point.p-mem0 .pname { color: var(--accent); }
+
+        .pmap .point.p-letta  { left: 80%; top: 72%; }
+        .pmap .point.p-letta .dot { background: var(--purple); }
+        .pmap .point.p-letta .pname { color: var(--purple); }
+
+        .pmap .point.p-memoir { left: 42%; top: 18%; }
+        .pmap .point.p-memoir .dot { background: var(--orange); }
+        .pmap .point.p-memoir .pname { color: var(--orange); }
+
+        .pmap .point.p-obs    { left: 76%; top: 48%; }
+        .pmap .point.p-obs .dot { background: var(--teal); }
+        .pmap .point.p-obs .pname { color: var(--teal); }
+
+        .pmap .point.p-zep    { left: 22%; top: 24%; }
+        .pmap .point.p-zep .dot { background: var(--pink); }
+        .pmap .point.p-zep .pname { color: var(--pink); }
+
+        .pmap-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 24px;
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 12px;
+        }
+        .pmap-legend .lit strong { color: var(--text); }
+
+        .pmap-coords {
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+        }
+        .pmap-coords .coord-label {
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--gray);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .pmap-coords .coord-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+        .pmap-coords .coord-list li {
+            display: grid;
+            grid-template-columns: 140px 48px 1fr;
+            gap: 12px;
+            align-items: baseline;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .pmap-coords .coord-list strong { font-weight: 900; }
+        .pmap-coords .coord-pos {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--gray);
+            background: var(--gray-light);
+            padding: 1px 6px;
+            border-radius: 4px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .pmap-coords .coord-why { color: var(--text); font-size: 13px; }
+
+        .pmap-coords .c-mem0   strong { color: var(--accent); }
+        .pmap-coords .c-letta  strong { color: var(--purple); }
+        .pmap-coords .c-memoir strong { color: var(--orange); }
+        .pmap-coords .c-obs    strong { color: var(--teal); }
+        .pmap-coords .c-zep    strong { color: var(--pink); }
+
+        /* ---------- Spotlight ---------- */
+
+        .spotlight {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0;
+            margin: 24px 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .spotlight .head {
+            padding: 24px 28px 16px;
+            position: relative;
+        }
+
+        .spotlight .head::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 6px;
+            height: 100%;
+        }
+
+        .spotlight.t-mem0 .head::before   { background: var(--accent); }
+        .spotlight.t-letta .head::before  { background: var(--purple); }
+        .spotlight.t-memoir .head::before { background: var(--orange); }
+        .spotlight.t-obs .head::before    { background: var(--teal); }
+        .spotlight.t-zep .head::before    { background: var(--pink); }
+
+        .spotlight .head-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .spotlight .name { font-size: 26px; font-weight: 900; line-height: 1.2; }
+        .spotlight .name .sub { display: block; font-size: 13px; font-weight: 500; color: var(--gray); margin-top: 2px; }
+
+        .spotlight.t-mem0 .name   { color: var(--accent); }
+        .spotlight.t-letta .name  { color: var(--purple); }
+        .spotlight.t-memoir .name { color: var(--orange); }
+        .spotlight.t-obs .name    { color: var(--teal); }
+        .spotlight.t-zep .name    { color: var(--pink); }
+
+        .spotlight .stars {
+            font-size: 13px;
+            color: var(--gray);
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            padding-top: 6px;
+        }
+
+        .spotlight .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .spotlight.t-mem0 .tag   { background: var(--accent-light); color: var(--accent); }
+        .spotlight.t-letta .tag  { background: var(--purple-light); color: var(--purple); }
+        .spotlight.t-memoir .tag { background: var(--orange-light); color: var(--orange); }
+        .spotlight.t-obs .tag    { background: var(--teal-light); color: var(--teal); }
+        .spotlight.t-zep .tag    { background: var(--pink-light); color: var(--pink); }
+
+        .spotlight .tagline { font-size: 17px; font-weight: 500; line-height: 1.5; margin: 0; }
+        .spotlight .body { padding: 0 28px 24px; }
+        .spotlight .field { margin-top: 20px; }
+        .spotlight .field-label { font-size: 11px; font-weight: 900; color: var(--gray); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+        .spotlight .field p { font-size: 15px; margin-bottom: 8px; line-height: 1.7; }
+        .spotlight .field p:last-child { margin-bottom: 0; }
+
+        /* ---------- Mini diagrams (inside spotlight) ---------- */
+
+        .diag {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin: 4px 0;
+        }
+
+        /* Mem0 diagram: input → LLM → 3 stores */
+        .diag-mem0 {
+            display: grid;
+            grid-template-columns: auto auto auto 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+        .diag-mem0 .box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .diag-mem0 .box.input { border-left: 3px solid var(--gray); }
+        .diag-mem0 .box.llm { border-left: 3px solid var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 700; }
+        .diag-mem0 .arrow { color: var(--gray); font-family: monospace; }
+        .diag-mem0 .stores { display: grid; grid-template-columns: 1fr; gap: 5px; }
+        .diag-mem0 .store {
+            background: white;
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Letta diagram: 3 tiers */
+        .diag-letta {
+            display: grid;
+            gap: 8px;
+        }
+        .diag-letta .tier {
+            display: grid;
+            grid-template-columns: 80px 1fr 90px;
+            gap: 12px;
+            align-items: center;
+            font-size: 12px;
+        }
+        .diag-letta .tier .name { font-weight: 700; color: var(--purple); font-family: 'JetBrains Mono', monospace; }
+        .diag-letta .tier .bar {
+            height: 22px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .diag-letta .tier .bar::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            background: var(--purple);
+            opacity: 0.7;
+        }
+        .diag-letta .tier.core .bar::after    { width: 20%; }
+        .diag-letta .tier.recall .bar::after  { width: 55%; }
+        .diag-letta .tier.archival .bar::after { width: 100%; }
+        .diag-letta .tier .note { color: var(--gray); font-size: 11px; text-align: right; }
+
+        /* Memoir diagram: git tree */
+        .diag-memoir {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.9;
+        }
+        .diag-memoir .row { display: flex; align-items: center; gap: 10px; }
+        .diag-memoir .hash { color: var(--orange); font-weight: 700; min-width: 70px; }
+        .diag-memoir .branch { color: var(--accent); font-size: 11px; padding: 1px 6px; background: var(--accent-light); border-radius: 4px; }
+        .diag-memoir .branch.exp { background: var(--pink-light); color: var(--pink); }
+        .diag-memoir .msg { color: var(--text); }
+        .diag-memoir .tree {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--orange);
+            margin-right: 8px;
+        }
+
+        /* Obsidian diagram: vault tree */
+        .diag-obs {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 18px;
+            align-items: center;
+            font-size: 12px;
+        }
+        .diag-obs .actor {
+            text-align: center;
+            font-size: 11px;
+        }
+        .diag-obs .actor .emoji { font-size: 26px; display: block; margin-bottom: 4px; }
+        .diag-obs .vault {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+        .diag-obs .vault .dir { color: var(--teal); font-weight: 700; }
+        .diag-obs .vault .file { color: var(--gray); }
+        .diag-obs .arrows {
+            font-size: 11px;
+            color: var(--gray);
+            text-align: center;
+            margin: 4px 0;
+            font-family: monospace;
+        }
+
+        /* Zep diagram: temporal graph */
+        .diag-zep {
+            display: grid;
+            gap: 10px;
+        }
+        .diag-zep .fact {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            background: white;
+            border-left: 3px solid var(--pink);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .diag-zep .fact.invalid { opacity: 0.5; border-left-style: dashed; }
+        .diag-zep .triple { font-family: 'JetBrains Mono', monospace; }
+        .diag-zep .triple .e { color: var(--accent); font-weight: 700; }
+        .diag-zep .triple .r { color: var(--gray); }
+        .diag-zep .triple .v { color: var(--pink); font-weight: 700; }
+        .diag-zep .validity { font-size: 11px; color: var(--gray); white-space: nowrap; }
+        .diag-zep .validity .now { color: var(--green); font-weight: 700; }
+
+        /* ---------- Flow code ---------- */
+
+        .spotlight .flow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            line-height: 1.7;
+            color: var(--text);
+            overflow-x: auto;
+            white-space: pre;
+            -webkit-overflow-scrolling: touch;
+        }
+        .spotlight .flow .c { color: var(--gray); }
+        .spotlight .flow .k { color: var(--accent); font-weight: 700; }
+        .spotlight .flow .s { color: var(--green); }
+        .spotlight .flow .a { color: var(--orange); font-weight: 700; }
+
+        .spotlight .pos {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 12px;
+            align-items: center;
+            font-size: 14px;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+        }
+
+        .spotlight .pos .axis { font-weight: 700; color: var(--gray); font-size: 12px; }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .pros-cons .col {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+
+        .pros-cons .col h5 {
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .pros-cons .pros h5 { color: var(--green); }
+        .pros-cons .cons h5 { color: var(--red); }
+        .pros-cons ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.7; }
+        .pros-cons li { margin-bottom: 4px; }
+
+        .spotlight .verdict {
+            background: linear-gradient(135deg, #fffef9, #fafafa);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 14.5px;
+            line-height: 1.6;
+            font-style: italic;
+            color: var(--text);
+        }
+
+        .spotlight .verdict strong { font-style: normal; }
+
+        .spotlight .links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; margin-top: 16px; }
+        .spotlight .links a { color: var(--accent); text-decoration: none; font-weight: 500; }
+        .spotlight .links a:hover { text-decoration: underline; }
+
+        /* ---------- Scenario ---------- */
+
+        .scenario {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px 26px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .scenario .prompt {
+            background: var(--gray-light);
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+
+        .scenario .prompt strong { color: var(--text); }
+
+        .responses {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .resp {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 14px;
+            align-items: start;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border-left: 3px solid var(--gray);
+        }
+
+        .resp.r-mem0   { border-left-color: var(--accent); }
+        .resp.r-letta  { border-left-color: var(--purple); }
+        .resp.r-memoir { border-left-color: var(--orange); }
+        .resp.r-obs    { border-left-color: var(--teal); }
+        .resp.r-zep    { border-left-color: var(--pink); }
+
+        .resp .who {
+            font-size: 13px;
+            font-weight: 900;
+            padding-top: 2px;
+        }
+        .resp.r-mem0 .who   { color: var(--accent); }
+        .resp.r-letta .who  { color: var(--purple); }
+        .resp.r-memoir .who { color: var(--orange); }
+        .resp.r-obs .who    { color: var(--teal); }
+        .resp.r-zep .who    { color: var(--pink); }
+
+        .resp .what {
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        .resp .what code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: white;
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        /* ---------- Benchmarks ---------- */
+
+        .bench {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px 26px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .bench h4 { font-size: 14px; font-weight: 900; margin-bottom: 14px; color: var(--text); }
+        .bench .subhead { font-size: 12px; color: var(--gray); margin-top: -8px; margin-bottom: 14px; }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 110px 1fr 70px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .bar-row .label { font-weight: 700; }
+        .bar-row .bar-bg {
+            height: 22px;
+            background: var(--gray-light);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-row .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .bar-row .value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; text-align: right; }
+
+        .bar-row.b-letta .bar-fill { background: var(--purple); }
+        .bar-row.b-letta .label, .bar-row.b-letta .value { color: var(--purple); }
+        .bar-row.b-zep .bar-fill { background: var(--pink); }
+        .bar-row.b-zep .label, .bar-row.b-zep .value { color: var(--pink); }
+        .bar-row.b-mem0 .bar-fill { background: var(--accent); }
+        .bar-row.b-mem0 .label, .bar-row.b-mem0 .value { color: var(--accent); }
+        .bar-row.b-na .bar-fill { background: repeating-linear-gradient(45deg, #e5e7eb, #e5e7eb 4px, #f3f4f6 4px, #f3f4f6 8px); width: 100%; }
+        .bar-row.b-na .label { color: var(--gray); }
+        .bar-row.b-na .value { color: var(--gray); font-style: italic; font-size: 11px; }
+
+        .bench-note {
+            font-size: 11.5px;
+            color: var(--gray);
+            margin-top: 14px;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* ---------- Cross comparison table ---------- */
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 20px -8px;
+            padding: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            min-width: 720px;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            font-size: 14px;
+        }
+
+        thead { background: var(--gray-light); }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { font-weight: 700; font-size: 13px; color: var(--text); }
+        th.axis { width: 140px; color: var(--gray); font-weight: 500; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #fafafa; }
+        td.axis { font-weight: 700; color: var(--gray); font-size: 13px; background: #fafafa; }
+        td .y { color: var(--green); font-weight: 700; }
+        td .n { color: var(--red); font-weight: 700; }
+        td .m { color: var(--orange); font-weight: 700; }
+
+        .col-mem0   { color: var(--accent); }
+        .col-letta  { color: var(--purple); }
+        .col-memoir { color: var(--orange); }
+        .col-obs    { color: var(--teal); }
+        .col-zep    { color: var(--pink); }
+
+        .mobile-hint { display: none; font-size: 12px; color: var(--gray); text-align: center; padding: 6px; }
+
+        /* ---------- Time models ---------- */
+
+        .time-models { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 24px 0; }
+        .tm-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+        .tm-card h4 { font-size: 16px; font-weight: 900; margin-bottom: 8px; }
+        .tm-card .tm-tools { font-size: 12px; color: var(--gray); margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .tm-card p { font-size: 14px; margin: 0; line-height: 1.6; }
+        .tm-card .ex { font-size: 12px; color: var(--gray); margin-top: 8px; font-style: italic; }
+        .tm-card.flat       { border-top: 4px solid var(--gray); }
+        .tm-card.discrete   { border-top: 4px solid var(--orange); }
+        .tm-card.continuous { border-top: 4px solid var(--pink); }
+
+        /* Time models visual */
+        .tm-card .viz {
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin: 10px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            color: var(--gray);
+        }
+        .tm-card.flat .viz .dot { color: var(--gray); font-weight: 700; }
+        .tm-card.discrete .viz .dot { color: var(--orange); font-weight: 700; }
+        .tm-card.continuous .viz .dot { color: var(--pink); font-weight: 700; }
+
+        /* ---------- Spectrum bars ---------- */
+
+        .spectrum {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px 24px 24px;
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+        }
+
+        .spectrum h5 { font-size: 13px; font-weight: 900; margin-bottom: 16px; color: var(--text); }
+        .spectrum h5 + .axis-labels { margin-top: 0; }
+
+        .spectrum .axis-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--gray);
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spectrum .bar {
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .spectrum.truth .bar { background: linear-gradient(90deg, #d1d5db 0%, var(--orange) 75%, var(--pink) 100%); }
+        .spectrum.agency .bar { background: linear-gradient(90deg, var(--accent) 0%, var(--purple) 50%, var(--teal) 100%); }
+
+        .spectrum .pin {
+            position: absolute;
+            top: -4px;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .spectrum .pin .dot {
+            display: block;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid white;
+            margin: 0 auto;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+
+        .spectrum .pin .name { display: block; font-size: 12px; font-weight: 700; margin-top: 6px; }
+        .spectrum .pin .note { display: block; font-size: 10px; color: var(--gray); font-weight: 400; }
+
+        .spectrum.truth .pin.p-mem0   { left: 8%;  }
+        .spectrum.truth .pin.p-letta  { left: 25%; }
+        .spectrum.truth .pin.p-obs    { left: 47%; }
+        .spectrum.truth .pin.p-zep    { left: 75%; }
+        .spectrum.truth .pin.p-memoir { left: 95%; }
+
+        .spectrum.agency .pin.p-mem0   { left: 8%;  }
+        .spectrum.agency .pin.p-zep    { left: 22%; }
+        .spectrum.agency .pin.p-memoir { left: 50%; }
+        .spectrum.agency .pin.p-letta  { left: 78%; }
+        .spectrum.agency .pin.p-obs    { left: 92%; }
+
+        .spectrum .pin.p-mem0 .dot   { background: var(--accent); }
+        .spectrum .pin.p-letta .dot  { background: var(--purple); }
+        .spectrum .pin.p-obs .dot    { background: var(--teal); }
+        .spectrum .pin.p-zep .dot    { background: var(--pink); }
+        .spectrum .pin.p-memoir .dot { background: var(--orange); }
+
+        .spectrum .pin.p-mem0 .name   { color: var(--accent); }
+        .spectrum .pin.p-letta .name  { color: var(--purple); }
+        .spectrum .pin.p-obs .name    { color: var(--teal); }
+        .spectrum .pin.p-zep .name    { color: var(--pink); }
+        .spectrum .pin.p-memoir .name { color: var(--orange); }
+
+        /* ---------- Decision cards ---------- */
+
+        .decisions { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 20px 0; }
+
+        .dec {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .dec .case { font-size: 14px; color: var(--text); line-height: 1.5; }
+        .dec .ans { font-size: 14px; font-weight: 900; padding: 5px 14px; border-radius: 20px; white-space: nowrap; }
+
+        .dec.d-mem0   .ans { background: var(--accent-light); color: var(--accent); }
+        .dec.d-letta  .ans { background: var(--purple-light); color: var(--purple); }
+        .dec.d-memoir .ans { background: var(--orange-light); color: var(--orange); }
+        .dec.d-obs    .ans { background: var(--teal-light); color: var(--teal); }
+        .dec.d-zep    .ans { background: var(--pink-light); color: var(--pink); }
+
+        .dec.d-mem0   { border-left: 3px solid var(--accent); }
+        .dec.d-letta  { border-left: 3px solid var(--purple); }
+        .dec.d-memoir { border-left: 3px solid var(--orange); }
+        .dec.d-obs    { border-left: 3px solid var(--teal); }
+        .dec.d-zep    { border-left: 3px solid var(--pink); }
+
+        /* ---------- Deep dives ---------- */
+
+        .deep-dive {
+            background: linear-gradient(135deg, #fafafa, white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 24px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .deep-dive.dd-mz { background: linear-gradient(135deg, var(--orange-light), var(--pink-light)); }
+        .deep-dive.dd-ml { background: linear-gradient(135deg, var(--accent-light), var(--purple-light)); }
+        .deep-dive.dd-mo { background: linear-gradient(135deg, var(--orange-light), var(--teal-light)); }
+        .deep-dive.dd-mz2 { background: linear-gradient(135deg, var(--accent-light), var(--pink-light)); }
+
+        .deep-dive h3 { margin-top: 0; font-size: 18px; }
+
+        .deep-dive .lede {
+            font-size: 14.5px;
+            color: var(--text);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .vs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .vs-grid .col {
+            background: white;
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+
+        .vs-grid .col h5 {
+            font-size: 14px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .vs-mem0 h5   { color: var(--accent); }
+        .vs-letta h5  { color: var(--purple); }
+        .vs-memoir h5 { color: var(--orange); }
+        .vs-obs h5    { color: var(--teal); }
+        .vs-zep h5    { color: var(--pink); }
+
+        .vs-grid pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 6px;
+            line-height: 1.7;
+            overflow-x: auto;
+            color: var(--text);
+            white-space: pre;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .vs-grid p { font-size: 13.5px; margin: 10px 0 0; line-height: 1.6; color: var(--text); }
+
+        .dd-takeaway {
+            margin-top: 14px;
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13.5px;
+            font-style: italic;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .dd-takeaway strong { font-style: normal; font-weight: 900; }
+
+        /* ---------- Summary ---------- */
+
+        .summary-list { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 16px 0; }
+        .summary-list li {
+            list-style: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid var(--gray);
+            font-size: 15px;
+            box-shadow: var(--shadow);
+        }
+        .summary-list li.s-mem0   { border-left-color: var(--accent); }
+        .summary-list li.s-letta  { border-left-color: var(--purple); }
+        .summary-list li.s-memoir { border-left-color: var(--orange); }
+        .summary-list li.s-obs    { border-left-color: var(--teal); }
+        .summary-list li.s-zep    { border-left-color: var(--pink); }
+        .summary-list li strong { font-weight: 900; }
+
+        .closing {
+            background: var(--accent-light);
+            border-radius: 12px;
+            padding: 22px 26px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .closing p { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.6; }
+        .closing strong { color: var(--accent); }
+
+        /* ---------- Sources ---------- */
+
+        .sources {
+            background: var(--gray-light);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-top: 32px;
+            font-size: 14px;
+        }
+        .sources h3 { margin-top: 0; font-size: 16px; }
+        .sources ul { margin: 0; padding-left: 18px; }
+        .sources li { margin-bottom: 6px; }
+        .sources a { color: var(--accent); text-decoration: none; }
+        .sources a:hover { text-decoration: underline; }
+
+        footer {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--gray);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 768px) {
+            body { font-size: 16px; }
+            .hero { padding: 80px 16px 28px; }
+            .hero h1 { font-size: 26px; }
+            .content { padding: 0 16px 60px; }
+            .walls { grid-template-columns: 1fr; }
+            .time-models { grid-template-columns: 1fr; }
+            .pros-cons { grid-template-columns: 1fr; }
+            .vs-grid { grid-template-columns: 1fr; }
+            .spotlight .head { padding: 22px 22px 14px; }
+            .spotlight .body { padding: 0 22px 22px; }
+            .spotlight .name { font-size: 22px; }
+            .spotlight .head-row { flex-direction: column; gap: 4px; }
+            .spotlight .stars { padding-top: 0; }
+            .mobile-hint { display: block; }
+            h2.section { font-size: 21px; }
+            .dec { grid-template-columns: 1fr; }
+            .dec .ans { justify-self: start; }
+            .pmap { aspect-ratio: 1 / 1.1; }
+            .pmap-legend { grid-template-columns: 1fr; }
+            .pmap-coords .coord-list li { grid-template-columns: 1fr 48px; gap: 6px 10px; }
+            .pmap-coords .coord-list .coord-why { grid-column: 1 / -1; color: var(--gray); font-size: 12px; }
+            .resp { grid-template-columns: 1fr; gap: 6px; }
+            .diag-mem0 { grid-template-columns: 1fr; gap: 6px; }
+            .diag-mem0 .arrow { display: none; }
+            .diag-obs { grid-template-columns: 1fr; gap: 10px; }
+            .bar-row { grid-template-columns: 90px 1fr 60px; font-size: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            body { font-size: 15px; }
+            .hero { padding: 68px 14px 24px; }
+            .hero h1 { font-size: 22px; }
+            .hero .subtitle { font-size: 14px; }
+            .content { padding: 0 14px 48px; }
+            .intent { padding: 22px 22px; }
+            .intent h2 { font-size: 18px; }
+            .spotlight .head { padding: 20px 18px 12px; }
+            .spotlight .body { padding: 0 18px 18px; }
+            .spotlight .name { font-size: 20px; }
+            .spotlight .tagline { font-size: 15px; }
+            .spotlight .flow { font-size: 12px; padding: 12px 14px; }
+            .spotlight .pos { grid-template-columns: 1fr; gap: 4px; }
+            .spotlight .pos .axis { font-size: 11px; }
+            .deep-dive { padding: 20px 22px; }
+            .closing { padding: 18px 20px; }
+            .closing p { font-size: 14px; }
+            .pmap .point .pname { font-size: 11px; }
+            .scenario { padding: 18px 20px; }
+        }
+
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="inner">
+        <span class="logo">Papers for Kids</span>
+        <a href="https://devload.github.io">Home</a>
+        <a href="/papers/">Papers</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="badge">Comparison &amp; Analysis</div>
+    <h1>AI Agent Memory<br><span>다섯 진영을 가르는 진짜 기준</span></h1>
+    <p class="subtitle">Mem0 · Letta · Memoir · Obsidian + MCP · Zep — 같은 'AI 메모리' 시장처럼 보이지만, 다섯 도구는 사실 <strong>서로 다른 종류의 문제</strong>를 풀고 있다.</p>
+    <div class="meta">
+        <span>📅 2026년 5월</span>
+        <span>⏱ 약 15분</span>
+        <span>🔍 5-way 분석 + 3개 1:1 비교</span>
+    </div>
+</section>
+
+<div class="content">
+
+    <!-- ============ INTENT ============ -->
+
+    <div class="intent">
+        <div class="kicker">왜 이 글이 존재하는가</div>
+        <h2>같은 문제, 다섯 가지 풀이</h2>
+        <p>"AI에게 어떻게 기억을 줄까"는 아직 업계 합의가 없는 질문이다. <code>CLAUDE.md</code> 같은 단일 파일, 벡터 DB의 임베딩, 매 세션 클린 슬레이트 — 모두 부분적 해법이고 각자 한계가 있다.</p>
+        <p>프로덕션 에이전트가 결국 부딪히는 공통적인 세 가지 문제가 있다:</p>
+
+        <div class="walls">
+            <div class="wall w1">
+                <div class="icon">🧪</div>
+                <h4>Context Contamination</h4>
+                <p>한 작업/브랜치에서 배운 패턴이 무관한 작업에 새어 나옴. 컨텍스트 격리가 어려움.</p>
+            </div>
+            <div class="wall w2">
+                <div class="icon">💸</div>
+                <h4>Token Rent</h4>
+                <p>메모리 한 줄 수정해도 prefix cache가 통째로 무효화 → 매 턴 전체 재처리.</p>
+            </div>
+            <div class="wall w3">
+                <div class="icon">🌀</div>
+                <h4>Memory Drift</h4>
+                <p>잘못된 학습이 누적되어도 추적·되돌리기가 어려움. 메모리 디버깅 도구 부재.</p>
+            </div>
+        </div>
+
+        <p>다섯 도구는 이 세 문제를 <strong>서로 다른 위치에서</strong> 공격한다. "어느 게 더 낫다"가 아니라 <strong>당신 문제와 같은 위치에서 싸우는 도구가 무엇이냐</strong>가 핵심이다.</p>
+        <p style="font-size: 12px; color: var(--gray); margin-top: 12px; margin-bottom: 0;"><em>📎 위 세 문제의 분류는 Memoir 진영에서 처음 정리한 프레임이지만, 다섯 도구 모두 이 중 일부를 의식적으로 풀려고 한다 — 즉 비교 축으로는 유효하다.</em></p>
+    </div>
+
+    <!-- ============ POSITIONING MAP ============ -->
+
+    <h2 class="section"><span class="num">MAP</span>한눈에 보는 포지셔닝</h2>
+    <p class="section-lede">다섯 도구가 어떻게 갈리는지 두 축으로 본다 — <strong>"메모리 변경을 어떻게 다루나"</strong>(진실 모델)와 <strong>"누가 메모리를 결정하나"</strong>(관리 주체). 같은 도구라도 두 축에서 자리가 다르다.</p>
+
+    <div class="spectrum truth">
+        <h5>① 진실 모델 — 메모리 변경을 어떻게 다루나</h5>
+        <div class="axis-labels">
+            <span>← 덮어쓰기</span>
+            <span>이력 보존 →</span>
+        </div>
+        <div class="bar">
+            <div class="pin p-mem0"><span class="dot"></span><span class="name">Mem0</span><span class="note">update</span></div>
+            <div class="pin p-letta"><span class="dot"></span><span class="name">Letta</span><span class="note">에이전트 판단</span></div>
+            <div class="pin p-obs"><span class="dot"></span><span class="name">Obsidian</span><span class="note">사람 편집</span></div>
+            <div class="pin p-zep"><span class="dot"></span><span class="name">Zep</span><span class="note">validity</span></div>
+            <div class="pin p-memoir"><span class="dot"></span><span class="name">Memoir</span><span class="note">commit/branch</span></div>
+        </div>
+    </div>
+
+    <div class="spectrum agency">
+        <h5>② 관리 주체 — 누가 메모리를 결정하나</h5>
+        <div class="axis-labels">
+            <span>← 시스템</span>
+            <span>사람/에이전트 →</span>
+        </div>
+        <div class="bar">
+            <div class="pin p-mem0"><span class="dot"></span><span class="name">Mem0</span><span class="note">passive 추출</span></div>
+            <div class="pin p-zep"><span class="dot"></span><span class="name">Zep</span><span class="note">async 추출</span></div>
+            <div class="pin p-memoir"><span class="dot"></span><span class="name">Memoir</span><span class="note">분류기+사람</span></div>
+            <div class="pin p-letta"><span class="dot"></span><span class="name">Letta</span><span class="note">self-edit</span></div>
+            <div class="pin p-obs"><span class="dot"></span><span class="name">Obsidian</span><span class="note">사람+AI</span></div>
+        </div>
+    </div>
+
+    <!-- ============ PART 1: SPOTLIGHTS ============ -->
+
+    <h2 class="section"><span class="num">PART 1</span>다섯 도구, 각자의 정체성</h2>
+    <p class="section-lede">먼저 다섯을 한 명씩 만난다. 같은 항목으로 정리해서 PART 2에서 자연스럽게 겹쳐 볼 수 있도록 — 정체성, 저장 구조 다이어그램, 작동 흐름, 포지션, 강·약, 사용 시점.</p>
+
+    <!-- Mem0 -->
+    <div class="spotlight t-mem0">
+        <div class="head">
+            <span class="tag">Memory Layer</span>
+            <div class="head-row">
+                <div class="name">Mem0<span class="sub">메모리 레이어 라이브러리</span></div>
+                <div class="stars">⭐ 47k+ stars</div>
+            </div>
+            <p class="tagline">에이전트 프레임워크 위에 <strong>얹는</strong> 메모리 어댑터. LangChain·CrewAI·AutoGen 무엇이든 상관없다.</p>
+        </div>
+        <div class="body">
+
+            <div class="field">
+                <div class="field-label">🧩 저장 구조</div>
+                <div class="diag diag-mem0">
+                    <div class="box input">대화·문서</div>
+                    <div class="arrow">→</div>
+                    <div class="box llm">LLM 추출</div>
+                    <div class="stores">
+                        <div class="store">🔢 Vector embeddings</div>
+                        <div class="store">🕸️ Graph (entities)</div>
+                        <div class="store">🔑 Key-Value (facts)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚙️ 작동 흐름</div>
+                <div class="flow"><span class="c"># 1. 대화·문서를 통째로 던진다</span>
+mem0.<span class="k">add</span>(messages=conversation, user_id=<span class="s">"sarah"</span>)
+   <span class="c">└─ LLM이 사실(fact)을 자동 추출</span>
+   <span class="c">└─ 중복 제거, 모순 사실은 update(덮어쓰기)</span>
+   <span class="c">└─ 벡터 + 그래프 + 키-값 하이브리드로 저장</span>
+
+<span class="c"># 2. 다음 세션에서 가져온다</span>
+results = mem0.<span class="k">search</span>(<span class="s">"what does Sarah prefer?"</span>, user_id=<span class="s">"sarah"</span>)</div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">📍 포지션</div>
+                <div class="pos"><span class="axis">관리 주체</span><span>시스템 (passive 추출 — 개발자가 input만 던지면 알아서)</span></div>
+                <div class="pos"><span class="axis">진실 모델</span><span>현재 사실만 유지 (Acme → 이직 시 옛 fact는 사라짐)</span></div>
+                <div class="pos"><span class="axis">메모리 계층</span><span>Conversation / Session / User / Organizational (4단)</span></div>
+                <div class="pos"><span class="axis">락인</span><span>낮음 — 라이브러리 import 하나로 도입, 빼기도 쉬움</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚖️ 강·약</div>
+                <div class="pros-cons">
+                    <div class="col pros">
+                        <h5>STRENGTHS</h5>
+                        <ul>
+                            <li>프레임워크 무관, 가장 큰 커뮤니티(47k+)</li>
+                            <li>LOCOMO 벤치마크 OpenAI 기본 +26%</li>
+                            <li>P95 1.44s, 패스트한 통합</li>
+                            <li>관리형 클라우드 제공</li>
+                        </ul>
+                    </div>
+                    <div class="col cons">
+                        <h5>WEAKNESSES</h5>
+                        <ul>
+                            <li>덮어쓰기 모델 — 이력 추적 불가</li>
+                            <li>사용자 상태 변화 시나리오 약함</li>
+                            <li>"왜 이 기억이 들어왔지" 디버깅 어려움</li>
+                            <li>브랜치 개념 없음</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">🎯 이런 사람에게</div>
+                <div class="verdict"><strong>컨슈머 챗봇이나 어시스턴트에서 "사용자를 기억한다"가 핵심 기능</strong>일 때. 빠른 도입·낮은 락인·검증된 벤치마크가 필요할 때 디폴트 선택.</div>
+            </div>
+
+            <div class="links">
+                <a href="https://github.com/mem0ai/mem0" target="_blank">GitHub →</a>
+                <a href="https://docs.mem0.ai/" target="_blank">Docs →</a>
+                <a href="https://arxiv.org/abs/2504.19413" target="_blank">arXiv 2504.19413 →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Letta -->
+    <div class="spotlight t-letta">
+        <div class="head">
+            <span class="tag">Agent Runtime</span>
+            <div class="head-row">
+                <div class="name">Letta<span class="sub">에이전트 런타임 (구 MemGPT)</span></div>
+                <div class="stars">⭐ 18k+ stars</div>
+            </div>
+            <p class="tagline">"LLM as Operating System" — 에이전트가 자기 메모리를 <strong>직접 관리</strong>하도록 만든 풀스택 런타임.</p>
+        </div>
+        <div class="body">
+
+            <div class="field">
+                <div class="field-label">🧩 저장 구조 — OS 비유 3계층</div>
+                <div class="diag diag-letta">
+                    <div class="tier core">
+                        <span class="name">Core</span>
+                        <div class="bar"></div>
+                        <span class="note">RAM · 항상 in-context</span>
+                    </div>
+                    <div class="tier recall">
+                        <span class="name">Recall</span>
+                        <div class="bar"></div>
+                        <span class="note">디스크 캐시 · 대화 검색</span>
+                    </div>
+                    <div class="tier archival">
+                        <span class="name">Archival</span>
+                        <div class="bar"></div>
+                        <span class="note">콜드 스토리지 · 벡터</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚙️ 작동 흐름</div>
+                <div class="flow"><span class="c"># 에이전트의 reasoning loop 안에서</span>
+<span class="c"># 에이전트가 판단해서 직접 호출:</span>
+agent.<span class="k">core_memory_append</span>(<span class="s">"Sarah prefers tabs"</span>)
+agent.<span class="k">archival_memory_insert</span>(...)   <span class="c"># Core 꽉 차면</span>
+agent.<span class="k">archival_memory_search</span>(...)   <span class="c"># 옛 일 떠올릴 때</span>
+
+<span class="c"># 무엇을 어디에 저장할지 에이전트가 스스로 결정 — Mem0와 정반대</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">📍 포지션</div>
+                <div class="pos"><span class="axis">관리 주체</span><span>에이전트 자신 (tool call로 self-edit)</span></div>
+                <div class="pos"><span class="axis">진실 모델</span><span>에이전트의 판단이 진실 (자율적이지만 책임도 큼)</span></div>
+                <div class="pos"><span class="axis">메모리 계층</span><span>Core / Recall / Archival (OS의 RAM/캐시/콜드)</span></div>
+                <div class="pos"><span class="axis">락인</span><span>높음 — 에이전트 reasoning loop 전체를 Letta가 소유</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚖️ 강·약</div>
+                <div class="pros-cons">
+                    <div class="col pros">
+                        <h5>STRENGTHS</h5>
+                        <ul>
+                            <li>장기 호라이즌 일관성에 강함</li>
+                            <li>LongMemEval 83.2% (오픈소스 상위권)</li>
+                            <li>2026-01 Conversations API — 다중 에이전트 공유</li>
+                            <li>MemGPT 논문 기반, 학술적 기반 탄탄</li>
+                        </ul>
+                    </div>
+                    <div class="col cons">
+                        <h5>WEAKNESSES</h5>
+                        <ul>
+                            <li>런타임 락인 — 이미 짠 loop를 버려야</li>
+                            <li>관리형 클라우드 아직 개발 중</li>
+                            <li>셋업·인프라 부담 큼</li>
+                            <li>이력·브랜치 1급 지원 없음</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">🎯 이런 사람에게</div>
+                <div class="verdict"><strong>며칠~몇 주 동안 자율로 일하는 에이전트가 핵심 제품</strong>일 때. 에이전트가 스스로 무엇을 기억할지 결정해야 하는 시나리오.</div>
+            </div>
+
+            <div class="links">
+                <a href="https://github.com/letta-ai/letta" target="_blank">GitHub →</a>
+                <a href="https://www.letta.com/blog/memgpt-and-letta" target="_blank">MemGPT → Letta 전환 →</a>
+                <a href="https://arxiv.org/abs/2310.08560" target="_blank">MemGPT 논문 →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memoir -->
+    <div class="spotlight t-memoir">
+        <div class="head">
+            <span class="tag">Versioned Store</span>
+            <div class="head-row">
+                <div class="name">Memoir<span class="sub">git 기반 버전관리 메모리 스토어</span></div>
+                <div class="stars">⭐ ~400 (alpha)</div>
+            </div>
+            <p class="tagline">"git-like"가 비유가 아니다. <strong>literally git이다.</strong> ProllyTree(Merkle B-tree)가 실제 <code>.git</code> 디렉토리를 만든다.</p>
+        </div>
+        <div class="body">
+
+            <div class="field">
+                <div class="field-label">🧩 저장 구조 — 진짜 git commit tree</div>
+                <div class="diag diag-memoir">
+                    <div class="row"><span class="tree">●</span><span class="hash">7f3a2b1</span><span class="branch">main</span><span class="msg">add preferences.coding.style</span></div>
+                    <div class="row"><span class="tree">│</span></div>
+                    <div class="row"><span class="tree">●</span><span class="hash">9b4c8d2</span><span></span><span class="msg">add profile.identity.name</span></div>
+                    <div class="row"><span class="tree">│ ╲</span></div>
+                    <div class="row"><span class="tree">│  ●</span><span class="hash">3c8d1e0</span><span class="branch exp">experiment</span><span class="msg">try new framework</span></div>
+                    <div class="row"><span class="tree">│ ╱</span></div>
+                    <div class="row"><span class="tree">●</span><span class="hash">2a9f6c4</span><span></span><span class="msg">initial commit</span></div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚙️ 작동 흐름</div>
+                <div class="flow">$ memoir new my-store <span class="c"># .git 디렉토리 실제 생성</span>
+$ memoir remember <span class="s">"Sarah prefers tabs"</span>
+   <span class="c">└─ LLM이 시맨틱 경로 분류:</span>
+   <span class="c">   preferences.coding.style</span>
+   <span class="c">└─ ProllyTree에 저장 → 자동 git commit</span>
+
+$ git log --oneline   <span class="c"># 진짜 git 명령어 동작</span>
+$ git checkout 9b4c8d2  <span class="c"># 옛 메모리 상태로 시간 여행</span>
+$ git branch experiment <span class="c"># 평행 우주 메모리</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">📍 포지션</div>
+                <div class="pos"><span class="axis">관리 주체</span><span>LLM 분류기(자동 경로) + 사람(commit/branch 결정)</span></div>
+                <div class="pos"><span class="axis">진실 모델</span><span>커밋 이력 전체가 진실 — 과거 모든 상태로 돌아갈 수 있음</span></div>
+                <div class="pos"><span class="axis">자료구조</span><span>ProllyTree (Dolt 영감) + 실제 git 저장소 — SHA-256 무결성</span></div>
+                <div class="pos"><span class="axis">락인</span><span>중간 — git 호환이라 데이터는 빼낼 수 있음</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚖️ 강·약</div>
+                <div class="pros-cons">
+                    <div class="col pros">
+                        <h5>STRENGTHS</h5>
+                        <ul>
+                            <li>branch / merge / blame / checkout이 1급</li>
+                            <li>코드 git 브랜치와 페어링 가능</li>
+                            <li>경로 기반 핀포인트 조회 (cache 친화)</li>
+                            <li>기존 git 도구체인 그대로 활용</li>
+                        </ul>
+                    </div>
+                    <div class="col cons">
+                        <h5>WEAKNESSES</h5>
+                        <ul>
+                            <li>알파 단계, 생태계 작음 (~400 stars)</li>
+                            <li>벤치마크 공개 없음</li>
+                            <li>대용량 blob·대규모 브랜치는 git 한계 상속</li>
+                            <li>사람 직접 가독성 낮음 (UI 거쳐야)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">🎯 이런 사람에게</div>
+                <div class="verdict"><strong>코딩 에이전트가 <code>git checkout</code>마다 컨텍스트도 같이 갈아끼워져야</strong> 할 때. 잘못된 학습을 <code>memoir checkout</code>으로 되돌리고 싶을 때.</div>
+            </div>
+
+            <div class="links">
+                <a href="https://github.com/zhangfengcdt/memoir" target="_blank">GitHub →</a>
+                <a href="https://www.memoir-ai.dev/" target="_blank">memoir-ai.dev →</a>
+                <a href="https://zhangfengcdt.github.io/memoir/" target="_blank">Docs →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Obsidian -->
+    <div class="spotlight t-obs">
+        <div class="head">
+            <span class="tag">Markdown Backend</span>
+            <div class="head-row">
+                <div class="name">Obsidian + MCP<span class="sub">마크다운 vault를 AI 메모리로</span></div>
+                <div class="stars">⭐ mcp-obsidian 3k+ · MCPVault 등</div>
+            </div>
+            <p class="tagline">메모리를 <strong>사람도 읽을 수 있는 마크다운 파일</strong>로. 사람과 에이전트가 같은 vault를 공유한다 — 최근 1년 사이 폭발적으로 성장한 패턴.</p>
+        </div>
+        <div class="body">
+
+            <div class="field">
+                <div class="field-label">🧩 저장 구조 — 사람과 AI가 같은 .md 공유</div>
+                <div class="diag diag-obs">
+                    <div class="actor">
+                        <span class="emoji">🧑</span>
+                        사람
+                        <div class="arrows">↕</div>
+                    </div>
+                    <div class="vault">
+<span class="dir">📁 vault/</span>
+<span class="file">  ├─ preferences.md</span>
+<span class="file">  ├─ profile.md</span>
+<span class="dir">  └─ projects/</span>
+<span class="file">      ├─ a.md</span>
+<span class="file">      └─ b.md</span>
+                    </div>
+                    <div class="actor">
+                        <span class="emoji">🤖</span>
+                        에이전트
+                        <div class="arrows">↕</div>
+                        <span style="font-size: 10px; color: var(--gray);">via MCP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚙️ 작동 흐름</div>
+                <div class="flow"><span class="c"># 에이전트 ↔ MCP 서버 ↔ Obsidian vault</span>
+Agent → MCP server → vault/<span class="s">preferences.md</span>
+                 ↓
+   [사람도 옵시디언으로 같은 파일을 열어 봄]
+                 ↓
+   (선택) git plugin이 변경을 자동 커밋
+
+<span class="c"># Karpathy's LLM Wiki 패턴:</span>
+<span class="c">"노트는 LLM이 유지보수, 사람은 viewer"</span>
+
+<span class="c"># 인기 MCP 서버들:</span>
+<span class="a">mcp-obsidian</span>      <span class="c"># 3k+ stars, Local REST API 필요</span>
+<span class="a">MCPVault</span>          <span class="c"># Claude Skill, 14개 tool, BM25</span>
+<span class="a">obsidian-mcp-plugin</span>  <span class="c"># 지식 그래프 multi-hop</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">📍 포지션</div>
+                <div class="pos"><span class="axis">관리 주체</span><span>사람 + 에이전트 공동 — 둘 다 동등하게 write</span></div>
+                <div class="pos"><span class="axis">진실 모델</span><span>마크다운 본문이 진실 — 사람이 보는 그대로</span></div>
+                <div class="pos"><span class="axis">저장 포맷</span><span>일반 .md 파일 (vault 디렉토리, wikilink, 태그)</span></div>
+                <div class="pos"><span class="axis">락인</span><span>낮음 — vault는 그냥 디렉토리</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚖️ 강·약</div>
+                <div class="pros-cons">
+                    <div class="col pros">
+                        <h5>STRENGTHS</h5>
+                        <ul>
+                            <li>사람 가독성·UX 최고 (그래프 뷰, 백링크)</li>
+                            <li>거대한 플러그인 생태계</li>
+                            <li>벤더 락인 거의 없음 (그냥 마크다운)</li>
+                            <li>기존 노트 자산 즉시 활용</li>
+                        </ul>
+                    </div>
+                    <div class="col cons">
+                        <h5>WEAKNESSES</h5>
+                        <ul>
+                            <li>핀포인트 접근 비효율 (청크 RAG 필요)</li>
+                            <li>마크다운 한 줄만 수정해도 cache 무효화</li>
+                            <li>버전관리는 git plugin 별도</li>
+                            <li>MCP 서버마다 기능·신뢰성 편차</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">🎯 이런 사람에게</div>
+                <div class="verdict"><strong>사람도 같이 보고 편집하는 "second brain"</strong>이 필요할 때. 이미 옵시디언 vault에 자산이 쌓여 있을 때.</div>
+            </div>
+
+            <div class="links">
+                <a href="https://github.com/MarkusPfundstein/mcp-obsidian" target="_blank">mcp-obsidian →</a>
+                <a href="https://medium.com/@ai_transfer_lab/mcpvault-the-claude-skill-that-turns-obsidian-into-a-live-agent-memory-6f3aca3dfc4c" target="_blank">MCPVault 가이드 →</a>
+                <a href="https://github.com/Ar9av/obsidian-wiki" target="_blank">Karpathy LLM Wiki →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zep -->
+    <div class="spotlight t-zep">
+        <div class="head">
+            <span class="tag">Temporal Knowledge Graph</span>
+            <div class="head-row">
+                <div class="name">Zep (Graphiti)<span class="sub">시간 인지 지식 그래프 메모리 서버</span></div>
+                <div class="stars">⭐ Graphiti 14k+ (8개월)</div>
+            </div>
+            <p class="tagline">사실(fact)마다 <strong>"언제부터 참이었고 언제 무효화됐는지"</strong> 시간 윈도를 단다. 갱신 시 옛 사실을 지우지 않고 invalidate한다.</p>
+        </div>
+        <div class="body">
+
+            <div class="field">
+                <div class="field-label">🧩 저장 구조 — fact마다 validity window</div>
+                <div class="diag diag-zep">
+                    <div class="fact invalid">
+                        <span class="triple"><span class="e">(Sarah)</span> <span class="r">— works_at →</span> <span class="v">(Acme)</span></span>
+                        <span class="validity">2024-03 → 2025-08</span>
+                    </div>
+                    <div class="fact">
+                        <span class="triple"><span class="e">(Sarah)</span> <span class="r">— works_at →</span> <span class="v">(Globex)</span></span>
+                        <span class="validity">2025-08 → <span class="now">∞</span></span>
+                    </div>
+                    <div class="fact">
+                        <span class="triple"><span class="e">(Sarah)</span> <span class="r">— prefers →</span> <span class="v">(tabs)</span></span>
+                        <span class="validity">2024-09 → <span class="now">∞</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚙️ 작동 흐름</div>
+                <div class="flow"><span class="c"># 1. 데이터 ingestion (메시지·문서·JSON)</span>
+zep.<span class="k">add</span>(messages=[...])
+   <span class="c">└─ Graphiti가 entity/relationship/fact 추출</span>
+   <span class="c">└─ 각 fact에 validity window 부여</span>
+
+<span class="c"># 2. 상태가 변하면 옛 fact를 invalidate (삭제 X)</span>
+
+<span class="c"># 3. 검색은 hybrid (semantic + BM25 + graph), LLM 호출 없음</span>
+zep.<span class="k">search</span>(<span class="s">"where does Sarah work?"</span>)         <span class="c"># 지금</span>
+zep.<span class="k">search</span>(<span class="s">"... as of 2025-01"</span>)              <span class="c"># 시간 여행</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">📍 포지션</div>
+                <div class="pos"><span class="axis">관리 주체</span><span>시스템 (async 추출 — Mem0와 비슷하지만 그래프 기반)</span></div>
+                <div class="pos"><span class="axis">진실 모델</span><span>시간축 위의 fact — "T시점에 무엇이 참이었나" 답함</span></div>
+                <div class="pos"><span class="axis">자료구조</span><span>Temporal Knowledge Graph (valid_from / valid_to)</span></div>
+                <div class="pos"><span class="axis">락인</span><span>중간 — Zep 서버 의존, Graphiti만 따로 self-host 가능</span></div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">⚖️ 강·약</div>
+                <div class="pros-cons">
+                    <div class="col pros">
+                        <h5>STRENGTHS</h5>
+                        <ul>
+                            <li>시간 추론에 압도적 강함 (LongMemEval 71.2%)</li>
+                            <li>사용자 상태 변화 추적 — 이력 보존</li>
+                            <li>검색 시 LLM 호출 없음, P95 300ms</li>
+                            <li>Graphiti 8개월에 14k stars</li>
+                        </ul>
+                    </div>
+                    <div class="col cons">
+                        <h5>WEAKNESSES</h5>
+                        <ul>
+                            <li>브랜치 개념 없음 (병렬 컨텍스트 격리 불가)</li>
+                            <li>서버 인프라 운영 부담</li>
+                            <li>그래프 스키마 설계 학습 곡선</li>
+                            <li>Mem0보다 무거운 도입</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">🎯 이런 사람에게</div>
+                <div class="verdict"><strong>엔터프라이즈 컨텍스트에서 사용자/엔티티 상태가 시간에 따라 변하고, 그 이력이 비즈니스적으로 중요</strong>할 때. CRM·의료·컴플라이언스처럼 "언제 무엇이 참이었는지"가 답할 가치가 있는 영역.</div>
+            </div>
+
+            <div class="links">
+                <a href="https://github.com/getzep/graphiti" target="_blank">Graphiti GitHub →</a>
+                <a href="https://www.getzep.com/" target="_blank">getzep.com →</a>
+                <a href="https://arxiv.org/abs/2501.13956" target="_blank">arXiv 2501.13956 →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SCENARIO ============ -->
+
+    <h2 class="section"><span class="num">PART 2</span>같은 입력, 다섯 가지 반응</h2>
+    <p class="section-lede">추상적 비교는 와닿지 않는다. 같은 사건이 들어왔을 때 다섯 도구가 <strong>실제로 무엇을 하는지</strong> 나란히 보면 차이가 즉시 드러난다.</p>
+
+    <!-- Scenario 1 -->
+    <div class="scenario">
+        <div class="prompt"><strong>🎬 시나리오 ①</strong> &nbsp; 2025년 8월. 사용자가 알린다: <em>"나 Acme에서 Globex로 이직했어"</em>. 메모리에는 <code>(Sarah, works_at, Acme, since 2024-03)</code>가 이미 저장되어 있다.</div>
+        <div class="responses">
+            <div class="resp r-mem0">
+                <div class="who">Mem0</div>
+                <div class="what">옛 fact를 <strong>덮어쓰기</strong>. 메모리에는 <code>works_at = Globex</code>만 남음. "2024년에 어디 일했어?"는 답 못함.</div>
+            </div>
+            <div class="resp r-letta">
+                <div class="who">Letta</div>
+                <div class="what">에이전트가 reasoning loop에서 판단 — <code>core_memory_replace()</code> 또는 옛 정보는 archival로 옮기고 새 정보를 core에. 결과는 에이전트 의사결정에 달림.</div>
+            </div>
+            <div class="resp r-memoir">
+                <div class="who">Memoir</div>
+                <div class="what">새 commit 생성: <code>profile.work.company</code> 경로에 Globex 저장. 옛 commit은 그대로 — <code>git checkout</code>으로 2025-07 시점 메모리로 시간 여행 가능.</div>
+            </div>
+            <div class="resp r-obs">
+                <div class="who">Obsidian + MCP</div>
+                <div class="what">에이전트가 <code>profile.md</code> 파일을 열어 "Acme" 줄을 "Globex"로 수정. 사람도 같은 파일을 봄. git plugin 켜져 있으면 변경이 기록됨.</div>
+            </div>
+            <div class="resp r-zep">
+                <div class="who">Zep</div>
+                <div class="what">옛 fact를 <strong>invalidate</strong> (삭제 X): <code>valid_to=2025-08</code> 설정. 새 fact 추가: <code>(Sarah, works_at, Globex, valid_from=2025-08)</code>. 두 fact 모두 그래프에 남음.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario 2 -->
+    <div class="scenario">
+        <div class="prompt"><strong>🎬 시나리오 ②</strong> &nbsp; 코딩 에이전트가 <code>main</code> 브랜치에서 "이 프로젝트는 React + Redux"라고 학습. 그 다음 <code>git checkout feature/migrate-to-zustand</code>로 전환했다.</div>
+        <div class="responses">
+            <div class="resp r-mem0">
+                <div class="who">Mem0</div>
+                <div class="what">메모리는 git을 모른다. 여전히 "Redux 패턴 추천" — feature 브랜치에 Redux 코드를 끼워 넣어 컨텍스트 오염 발생.</div>
+            </div>
+            <div class="resp r-letta">
+                <div class="who">Letta</div>
+                <div class="what">에이전트가 직접 인지하지 않으면 동일 문제. 다만 reasoning loop에서 "지금 브랜치가 다르네"를 알아챌 수 있는 자율성은 있음.</div>
+            </div>
+            <div class="resp r-memoir">
+                <div class="who">Memoir</div>
+                <div class="what">메모리 자체에 브랜치가 있음. <code>git checkout feature/...</code> 시 메모리도 함께 전환 — Redux 컨텍스트는 main 브랜치에만 머무름. <strong>본 시나리오의 정확한 해결책.</strong></div>
+            </div>
+            <div class="resp r-obs">
+                <div class="who">Obsidian + MCP</div>
+                <div class="what">vault 자체가 git repo라면 브랜치별로 다른 노트 가능. 하지만 일반적으로 한 vault만 보고 있어 같은 문제 발생 가능.</div>
+            </div>
+            <div class="resp r-zep">
+                <div class="who">Zep</div>
+                <div class="what">브랜치 개념 없음. 시간축에는 강하지만 "병렬 컨텍스트 격리"는 약점.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario 3 -->
+    <div class="scenario">
+        <div class="prompt"><strong>🎬 시나리오 ③</strong> &nbsp; 어제 세션에서 에이전트가 잘못된 정보를 학습했다: "이 함수는 thread-safe함" (사실 아님). 오늘 그 사실을 알아챘다. 어떻게 되돌리나?</div>
+        <div class="responses">
+            <div class="resp r-mem0">
+                <div class="who">Mem0</div>
+                <div class="what">새 정보로 update — 옛 잘못된 fact는 덮여 사라짐. 다만 "어느 세션에서 어떻게 들어왔는지" 추적은 어려움.</div>
+            </div>
+            <div class="resp r-letta">
+                <div class="who">Letta</div>
+                <div class="what">에이전트에게 알려주면 reasoning으로 core/archival을 수정. 다만 잘못된 정보로 이미 다른 결정이 내려졌으면 그 영향까지는 못 되돌림.</div>
+            </div>
+            <div class="resp r-memoir">
+                <div class="who">Memoir</div>
+                <div class="what"><code>memoir blame &lt;경로&gt;</code>로 언제 들어왔는지 식별 → <code>memoir checkout &lt;그 전 commit&gt;</code> 또는 <code>git revert</code>. <strong>코드 디버깅처럼 메모리도 디버깅.</strong></div>
+            </div>
+            <div class="resp r-obs">
+                <div class="who">Obsidian + MCP</div>
+                <div class="what">git plugin 있으면 <code>git log</code>로 추적 가능. 마크다운 한 줄 단위까지 blame.</div>
+            </div>
+            <div class="resp r-zep">
+                <div class="who">Zep</div>
+                <div class="what">잘못된 fact를 invalidate하고 새 fact 추가. validity 메타데이터에 출처 기록되어 있어 "언제 어떻게 들어왔는지"는 추적 가능.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ BENCHMARKS ============ -->
+
+    <h2 class="section"><span class="num">PART 3</span>벤치마크 — 공개된 숫자들</h2>
+    <p class="section-lede">모두가 동일 벤치마크를 돌린 건 아니지만, 공개된 숫자들을 모아 비교 가능한 형태로.</p>
+
+    <div class="bench">
+        <h4>LongMemEval — 장기 메모리 종합</h4>
+        <div class="subhead">100점 만점, 높을수록 좋음. 측정·공개한 두 도구만 표기.</div>
+        <div class="bar-row b-letta">
+            <span class="label">Letta</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 83.2%;"></div></div>
+            <span class="value">83.2</span>
+        </div>
+        <div class="bar-row b-zep">
+            <span class="label">Zep / Graphiti</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 71.2%;"></div></div>
+            <span class="value">71.2</span>
+        </div>
+        <div class="bench-note">📌 Letta는 self-edit 기반 자율성이 장기 호라이즌에 유리. Zep은 시간 추론 영역에 강함. <strong>Mem0·Memoir·Obsidian은 이 벤치 미공개</strong> — 진영의 차이라기보단 각 팀의 벤치마크 우선순위 차이.</div>
+    </div>
+
+    <div class="bench">
+        <h4>그 외 공개된 자체 지표</h4>
+        <div class="subhead">측정 기준이 서로 달라 동일 차트로 묶을 수 없는 숫자들. 참고용 표로.</div>
+        <div class="table-wrap" style="margin: 8px -8px;">
+            <table style="min-width: 600px;">
+                <thead>
+                    <tr>
+                        <th>도구</th>
+                        <th>지표</th>
+                        <th>수치</th>
+                        <th>측정 기준</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="col-mem0"><strong>Mem0</strong></td>
+                        <td>LOCOMO 정확도</td>
+                        <td>+26% vs OpenAI 기본</td>
+                        <td>멀티턴 대화 사용자 기억 (자체 발표)</td>
+                    </tr>
+                    <tr>
+                        <td class="col-zep"><strong>Zep</strong></td>
+                        <td>검색 P95</td>
+                        <td>300ms</td>
+                        <td>hybrid search (semantic+BM25+graph), LLM 호출 없음</td>
+                    </tr>
+                    <tr>
+                        <td class="col-mem0"><strong>Mem0</strong></td>
+                        <td>검색 P95</td>
+                        <td>1.44s</td>
+                        <td>LLM 추출 포함 end-to-end</td>
+                    </tr>
+                    <tr>
+                        <td class="col-memoir"><strong>Memoir</strong></td>
+                        <td>경로 조회 지연</td>
+                        <td>0.1–10ms</td>
+                        <td>키-값 직접 조회 (검색 아님)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="bench-note">📌 검색 지연을 직접 비교하긴 어렵다 — Memoir의 "조회"는 키-값 lookup, Zep의 "검색"은 그래프 hybrid, Mem0의 "검색"은 LLM 처리까지 포함. 단순히 ms로 줄 세우면 사과·오렌지 비교가 된다.</div>
+    </div>
+
+    <div class="bench">
+        <h4>GitHub Stars — 커뮤니티 크기</h4>
+        <div class="subhead">2026년 5월 기준. 성숙도와 채택률의 간접 지표 (성능 지표 아님).</div>
+        <div class="bar-row b-mem0">
+            <span class="label">Mem0</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 100%;"></div></div>
+            <span class="value">47k+</span>
+        </div>
+        <div class="bar-row b-letta">
+            <span class="label">Letta</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 38%;"></div></div>
+            <span class="value">18k+</span>
+        </div>
+        <div class="bar-row b-zep">
+            <span class="label">Graphiti (Zep)</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 30%;"></div></div>
+            <span class="value">14k+</span>
+        </div>
+        <div class="bar-row b-zep">
+            <span class="label">mcp-obsidian</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 6%; background: var(--teal);"></div></div>
+            <span class="value" style="color: var(--teal);">3k+</span>
+        </div>
+        <div class="bar-row b-mem0">
+            <span class="label">Memoir</span>
+            <div class="bar-bg"><div class="bar-fill" style="width: 0.8%; background: var(--orange);"></div></div>
+            <span class="value" style="color: var(--orange);">~400</span>
+        </div>
+        <div class="bench-note">📌 stars는 인기 지표일 뿐 품질·적합도와 별개. Memoir는 알파 단계의 신생 프로젝트라 아직 작다.</div>
+    </div>
+
+    <!-- ============ CROSS COMPARISON ============ -->
+
+    <h2 class="section"><span class="num">PART 4</span>축별 비교 — 14차원</h2>
+    <p class="section-lede">시나리오·벤치마크는 행동을 보여주고, 표는 속성을 보여준다. 같은 축에서 의미 있게 비교 가능한 14개 차원.</p>
+
+    <p class="mobile-hint">← 표는 가로로 스크롤됩니다 →</p>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th class="axis">축</th>
+                    <th class="col-mem0">Mem0</th>
+                    <th class="col-letta">Letta</th>
+                    <th class="col-memoir">Memoir</th>
+                    <th class="col-obs">Obsidian+MCP</th>
+                    <th class="col-zep">Zep</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="axis">정체성</td><td>bolt-on 라이브러리</td><td>에이전트 런타임</td><td>git 기반 스토어</td><td>마크다운 백엔드</td><td>메모리 서버</td></tr>
+                <tr><td class="axis">저장 모델</td><td>벡터+그래프+KV</td><td>3계층 (Core/Recall/Archival)</td><td>ProllyTree + git</td><td>마크다운 파일</td><td>temporal knowledge graph</td></tr>
+                <tr><td class="axis">관리 주체</td><td>시스템 (passive)</td><td>에이전트 (self-edit)</td><td>LLM 분류기 + 사람</td><td>사람 + 에이전트</td><td>시스템 (async)</td></tr>
+                <tr><td class="axis">"진실" 모델</td><td>현재 사실</td><td>에이전트 판단</td><td>커밋 이력</td><td>마크다운 본문</td><td>시간축 위 fact</td></tr>
+                <tr><td class="axis">이력 보존</td><td><span class="n">✗</span> overwrite</td><td><span class="n">✗</span></td><td><span class="y">✓</span> commits</td><td><span class="m">△</span> git plugin 시</td><td><span class="y">✓</span> validity window</td></tr>
+                <tr><td class="axis">시간 여행</td><td><span class="n">✗</span></td><td><span class="n">✗</span></td><td><span class="y">✓</span> <code>checkout</code></td><td><span class="m">△</span></td><td><span class="y">✓</span> "as of T"</td></tr>
+                <tr><td class="axis">충돌 처리</td><td>LLM update</td><td>에이전트 판단</td><td>branch + merge</td><td>사람 결정</td><td>invalidate</td></tr>
+                <tr><td class="axis">브랜치</td><td><span class="n">✗</span></td><td><span class="n">✗</span></td><td><span class="y">✓</span> 1급</td><td><span class="m">△</span></td><td><span class="n">✗</span></td></tr>
+                <tr><td class="axis">검색 지연</td><td>중 (P95 1.44s)</td><td>Core는 0ms</td><td>0.1–10ms</td><td>BM25 / 벡터</td><td>P95 300ms</td></tr>
+                <tr><td class="axis">사람 가독성</td><td>낮음 (DB)</td><td>낮음 (DB)</td><td>중 (UI)</td><td><strong>최고</strong> (.md)</td><td>중 (그래프)</td></tr>
+                <tr><td class="axis">락인</td><td>낮음</td><td>높음 (loop 소유)</td><td>중 (git 호환)</td><td>낮음</td><td>중 (서버 의존)</td></tr>
+                <tr><td class="axis">공개 벤치마크</td><td>LOCOMO +26%</td><td>LongMemEval 83.2%</td><td>미공개</td><td>미공개</td><td>LongMemEval 71.2%</td></tr>
+                <tr><td class="axis">성숙도</td><td>Production 다수</td><td>Production 다수</td><td>Alpha</td><td>도구별 상이</td><td>Production</td></tr>
+                <tr><td class="axis">주 타겟</td><td>컨슈머 챗봇</td><td>자율 장기 에이전트</td><td>코딩+브랜치 워크플로</td><td>사람+AI second brain</td><td>엔터프라이즈 시간성</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="with-line">실무 결정 트리</h3>
+    <p>"어느 게 더 좋아?"가 아니라 <strong>"내 문제는 어디서 싸우는가?"</strong>가 맞는 질문이다. 단, 아래 매핑은 <em>대표적 케이스</em>일 뿐 — 실제 프로덕션에서는 둘을 결합하거나(예: Letta + Zep 백엔드), 어느 것도 완벽히 맞지 않는 회색 영역이 흔하다.</p>
+
+    <div class="decisions">
+        <div class="dec d-mem0"><div class="case">컨슈머 챗봇/어시스턴트에 "사용자를 기억" 기능을 빠르게 붙이고 싶다</div><div class="ans">→ Mem0</div></div>
+        <div class="dec d-letta"><div class="case">에이전트가 며칠~몇 주 동안 자율로 일해야 하고, 장기 일관성이 곧 제품</div><div class="ans">→ Letta</div></div>
+        <div class="dec d-memoir"><div class="case">코딩 에이전트가 <code>git checkout</code>마다 컨텍스트가 따라 갈아끼워져야 한다</div><div class="ans">→ Memoir</div></div>
+        <div class="dec d-obs"><div class="case">사람도 같이 보는 second brain, 이미 옵시디언 vault에 자산이 쌓여 있다</div><div class="ans">→ Obsidian + MCP</div></div>
+        <div class="dec d-zep"><div class="case">사용자/엔티티 상태가 시간에 따라 변하고 그 이력이 비즈니스적으로 중요하다</div><div class="ans">→ Zep</div></div>
+    </div>
+
+    <!-- ============ DEEP DIVES ============ -->
+
+    <h2 class="section"><span class="num">PART 5</span>1:1 Deep Dives — 가장 흥미로운 3쌍</h2>
+    <p class="section-lede">전체 비교가 아니라 <strong>대비가 가장 선명한 두 도구</strong>씩 묶어서, 각자의 설계 철학이 정반대로 갈리는 지점을 본다. 세 페어는 각각 다른 축의 대비를 보여준다 — 시간성·관리 주체·변경 처리.</p>
+
+    <!-- Deep dive 1: Memoir vs Zep -->
+    <div class="deep-dive dd-mz">
+        <h3>① Memoir ↔ Zep — 시간성의 두 모델</h3>
+        <p class="lede">다섯 중 <strong>과거를 1급으로 다루는 두 도구</strong>인데, 모델이 정반대다. Memoir는 코드 브랜치처럼 <strong>병렬성</strong>을, Zep은 DB temporal model처럼 <strong>시간성</strong>을 모델링한다.</p>
+        <div class="vs-grid">
+            <div class="col vs-memoir">
+                <h5>Memoir — 이산 스냅샷 (git)</h5>
+<pre>commit 1: profile.skill.python
+          = "intermediate"
+commit 2: profile.skill.python
+          = "expert"
+
+$ git checkout commit-1
+→ 옛 상태 <em>전체</em> 복원
+
+$ git checkout -b experiment
+→ 평행 우주 메모리</pre>
+                <p>코드 브랜치마다 다른 메모리. 실험 컨텍스트가 프로덕션 메모리를 오염시키지 않음.</p>
+            </div>
+            <div class="col vs-zep">
+                <h5>Zep — 연속 시간축 (DB temporal)</h5>
+<pre>Fact: (Sarah, skill, python,
+       intermediate)
+  valid_from=2024-03
+  valid_to=2025-08
+
+Fact: (Sarah, skill, python,
+       expert)
+  valid_from=2025-08
+  valid_to=∞
+
+→ "2024-05의 Sarah 실력?"
+   → intermediate</pre>
+                <p>시간이 흐르며 변하는 단일 진실. 브랜치 개념 없음. "언제 무엇이 참이었나"를 정확히 답함.</p>
+            </div>
+        </div>
+        <div class="dd-takeaway"><strong>핵심:</strong> 당신 도메인에서 "버전"이 의미 있나(Memoir), "시점"이 의미 있나(Zep)? 코드·문서·실험이라면 전자, CRM·의료·컴플라이언스라면 후자.</div>
+    </div>
+
+    <!-- Deep dive 2: Mem0 vs Letta -->
+    <div class="deep-dive dd-ml">
+        <h3>② Mem0 ↔ Letta — 관리 주체의 정반대</h3>
+        <p class="lede">둘 다 "에이전트의 메모리 관리"를 풀지만 <strong>누가 결정하느냐</strong>에서 정반대 진영. Mem0는 시스템이 알아서, Letta는 에이전트가 직접.</p>
+        <div class="vs-grid">
+            <div class="col vs-mem0">
+                <h5>Mem0 — 시스템이 결정 (passive)</h5>
+<pre>mem0.add(conversation)
+   ↓
+[LLM 추출 파이프라인]
+   ↓ 자동으로:
+- 어떤 fact를 뽑을지
+- 어디에 저장할지
+- 중복은 어떻게 처리할지
+- 모순은 어떻게 update할지
+모두 시스템이 결정.
+
+개발자: input 던지면 끝.</pre>
+                <p>"기억을 시스템에 위임" — 라이브러리처럼 쓰면 됨. 락인 낮음. 다만 디버깅·통제는 약함.</p>
+            </div>
+            <div class="col vs-letta">
+                <h5>Letta — 에이전트가 결정 (self-edit)</h5>
+<pre># reasoning loop 안에서
+agent.core_memory_append(...)
+agent.archival_memory_insert(...)
+agent.archival_memory_search(...)
+
+# 에이전트가 판단:
+- 지금 이 정보가 중요한가?
+- core에 둘까 archival로 갈까?
+- 옛 정보를 지울까 옮길까?
+모두 에이전트가 결정.</pre>
+                <p>"기억을 에이전트에게 위임" — 자율성·일관성 강함. 다만 reasoning 비용·loop 락인 큼.</p>
+            </div>
+        </div>
+        <div class="dd-takeaway"><strong>핵심:</strong> 메모리가 <em>외부 서비스</em>이길 원하는가(Mem0), <em>에이전트의 자율 영역</em>이길 원하는가(Letta)? "그냥 기억해줘"면 전자, "스스로 판단해야 해"면 후자.</div>
+    </div>
+
+    <!-- Deep dive 3: Mem0 vs Zep -->
+    <div class="deep-dive dd-mz2">
+        <h3>③ Mem0 ↔ Zep — 같은 자동화, 정반대 변경 처리</h3>
+        <p class="lede">둘 다 시스템 자동 추출 진영이지만, 모순된 정보가 들어왔을 때 <strong>옛 사실을 어떻게 다루냐</strong>에서 정반대. Mem0는 지우고, Zep은 무효화한다.</p>
+        <div class="vs-grid">
+            <div class="col vs-mem0">
+                <h5>Mem0 — 덮어쓰기 (overwrite)</h5>
+<pre># 옛 상태:
+(Sarah, works_at, Acme)
+
+# 새 입력: "이직했어 → Globex"
+
+mem0.add(new_message)
+   ↓ LLM이 모순 감지
+   ↓ 옛 fact를 update
+(Sarah, works_at, Globex)
+# Acme은 사라짐
+
+# "2024년 Sarah 직장?"
+→ ❌ 답 못함</pre>
+                <p>지금 사실이 곧 진실. 가볍고 빠르지만 시간 추론 불가.</p>
+            </div>
+            <div class="col vs-zep">
+                <h5>Zep — 무효화 (invalidate)</h5>
+<pre># 옛 상태:
+(Sarah, works_at, Acme,
+ valid_from=2024-03)
+
+# 새 입력: "이직했어 → Globex"
+
+zep.add(new_message)
+   ↓ Graphiti가 모순 감지
+   ↓ 옛 fact에 valid_to 설정
+(Sarah, works_at, Acme,
+ valid_from=2024-03,
+ valid_to=2025-08)  ← invalid
+
+(Sarah, works_at, Globex,
+ valid_from=2025-08)  ← valid
+
+# "2024년 Sarah 직장?"
+→ ✅ Acme</pre>
+                <p>옛 사실도 시간축 위에 남음. 무겁지만 시간 추론 가능.</p>
+            </div>
+        </div>
+        <div class="dd-takeaway"><strong>핵심:</strong> "지금 사실"만 알면 되나(Mem0), "언제 무엇이 참이었나"도 알아야 하나(Zep)? 챗봇이면 전자로 충분하지만, 엔터프라이즈 데이터라면 후자가 필요.</div>
+    </div>
+
+    <!-- ============ SUMMARY ============ -->
+
+    <h2 class="section"><span class="num">END</span>요약</h2>
+    <p>다섯 도구는 같은 "AI 메모리" 시장에서 경쟁하는 것처럼 보이지만, 실제로는 서로 다른 종류의 문제를 푼다.</p>
+
+    <ul class="summary-list">
+        <li class="s-mem0"><strong>Mem0</strong> — "기억을 자동으로 만들고 자동으로 갱신해줘"</li>
+        <li class="s-letta"><strong>Letta</strong> — "에이전트가 자기 머릿속을 직접 관리하게 해줘"</li>
+        <li class="s-memoir"><strong>Memoir</strong> — "메모리도 코드처럼 branch / commit / blame 되게 해줘"</li>
+        <li class="s-obs"><strong>Obsidian + MCP</strong> — "내가 보는 노트와 AI 메모리가 같은 파일이게 해줘"</li>
+        <li class="s-zep"><strong>Zep</strong> — "사실이 시간에 따라 어떻게 변했는지 추적해줘"</li>
+    </ul>
+
+    <div class="closing">
+        <p>도구를 고를 때 "어느 게 더 좋아?"는 잘못된 질문이다.<br>정확한 질문은 <strong>"내 문제는 어느 시간 모델·관리 주체에 속하는가?"</strong>이다.</p>
+    </div>
+
+    <div class="sources">
+        <h3>참고 자료</h3>
+        <ul>
+            <li><a href="https://github.com/mem0ai/mem0" target="_blank">Mem0 — GitHub</a> · <a href="https://arxiv.org/abs/2504.19413" target="_blank">arXiv 2504.19413</a></li>
+            <li><a href="https://github.com/letta-ai/letta" target="_blank">Letta — GitHub</a> · <a href="https://www.letta.com/blog/memgpt-and-letta" target="_blank">MemGPT → Letta 전환</a></li>
+            <li><a href="https://github.com/zhangfengcdt/memoir" target="_blank">Memoir — GitHub</a> · <a href="https://www.memoir-ai.dev/" target="_blank">memoir-ai.dev</a></li>
+            <li><a href="https://github.com/getzep/graphiti" target="_blank">Graphiti — GitHub</a> · <a href="https://arxiv.org/abs/2501.13956" target="_blank">Zep arXiv 2501.13956</a></li>
+            <li><a href="https://github.com/MarkusPfundstein/mcp-obsidian" target="_blank">mcp-obsidian</a> · <a href="https://medium.com/@ai_transfer_lab/mcpvault-the-claude-skill-that-turns-obsidian-into-a-live-agent-memory-6f3aca3dfc4c" target="_blank">MCPVault 가이드</a></li>
+            <li><a href="https://vectorize.io/articles/mem0-vs-letta" target="_blank">Mem0 vs Letta (Vectorize, 2026)</a> · <a href="https://vectorize.io/articles/mem0-vs-zep" target="_blank">Mem0 vs Zep (Vectorize, 2026)</a></li>
+            <li><a href="https://dev.to/varun_pratapbhardwaj_b13/5-ai-agent-memory-systems-compared-mem0-zep-letta-supermemory-superlocalmemory-2026-benchmark-59p3" target="_blank">5 Memory Systems Benchmark (DEV.to, 2026)</a></li>
+            <li><a href="https://atlan.com/know/best-ai-agent-memory-frameworks-2026/" target="_blank">Best AI Agent Memory Frameworks 2026 (Atlan)</a></li>
+        </ul>
+    </div>
+
+</div>
+
+<footer>
+    <a href="https://devload.github.io">devload.github.io</a> &middot; AI 논문을 쉽게, 누구나 이해할 수 있게
+</footer>
+
+</body>
+</html>
